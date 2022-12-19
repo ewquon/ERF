@@ -34,6 +34,7 @@ extern ProbParm parms;
  * Calculate perturbation to potential temperature and density at a
  * given (x,y,z). Note that pressure is not perturbed.
  */
+AMREX_GPU_HOST_DEVICE
 AMREX_FORCE_INLINE
 void
 perturb_rho_theta (const amrex::Real x,

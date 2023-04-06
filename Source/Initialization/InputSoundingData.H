@@ -98,12 +98,14 @@ public:
             U_inp_sound[0]     = U_inp_sound_tmp[0];
             V_inp_sound[0]     = V_inp_sound_tmp[0];
             for (int k=0; k < Nz; ++k) {
+                // set cell-centered values at k=1..Nz
                 z_inp_sound[k+1] = zbot + (k + 0.5) * dz;
                 theta_inp_sound[k+1] = interpolate_1d(z_inp_sound_tmp.dataPtr(), theta_inp_sound_tmp.dataPtr(), z_inp_sound[k+1], Ninp);
                    qv_inp_sound[k+1] = interpolate_1d(z_inp_sound_tmp.dataPtr(),    qv_inp_sound_tmp.dataPtr(), z_inp_sound[k+1], Ninp);
                     U_inp_sound[k+1] = interpolate_1d(z_inp_sound_tmp.dataPtr(),     U_inp_sound_tmp.dataPtr(), z_inp_sound[k+1], Ninp);
                     V_inp_sound[k+1] = interpolate_1d(z_inp_sound_tmp.dataPtr(),     V_inp_sound_tmp.dataPtr(), z_inp_sound[k+1], Ninp);
             }
+            // set zhi values at k=Nz+1
             z_inp_sound[Nz+1]     = ztop;
             theta_inp_sound[Nz+1] = interpolate_1d(z_inp_sound_tmp.dataPtr(), theta_inp_sound_tmp.dataPtr(), ztop, Ninp);
                qv_inp_sound[Nz+1] = interpolate_1d(z_inp_sound_tmp.dataPtr(),    qv_inp_sound_tmp.dataPtr(), ztop, Ninp);
@@ -131,11 +133,11 @@ public:
          * density.
          */
         const int maxiter = 10;
-        const int Ninp = size();
-        pm_integ.resize(Ninp);
-        pd_integ.resize(Ninp);
-        rhom_integ.resize(Ninp);
-        rhod_integ.resize(Ninp);
+        const int Nz = size(); // note: sounding data have been interpolated to grid levels
+        pm_integ.resize(Nz);
+        pd_integ.resize(Nz);
+        rhom_integ.resize(Nz);
+        rhod_integ.resize(Nz);
 
         // evaluate surface quantities (k=0)
         amrex::Real thm_surf = theta_ref_inp_sound *
@@ -169,20 +171,25 @@ public:
             }
         }
 
-        // now, integrate from the top of the sounding (where it's dry) back
+        // now, integrate from the top of the sounding (where it's presumably dry) back
         // down to get the dry air column properties
-        pd_integ[Ninp-1] = pm_integ[Ninp-1];
-        rhod_integ[Ninp-1] = 1 / (
-                    R_d/p_0 * theta_inp_sound[Ninp-1] * std::pow(pd_integ[Ninp-1]/p_0, -iGamma));
+        pd_integ[Nz-1] = pm_integ[Nz-1]; // Nz-1 should correspond to zhi
+        rhod_integ[Nz-1] = 1 / (
+                    R_d/p_0 * theta_inp_sound[Nz-1] * std::pow(pd_integ[Nz-1]/p_0, -iGamma));
         amrex::Print() << "z  p_d  rho_d  theta  U  V" << std::endl;
-        amrex::Print() << z_inp_sound[Ninp-1]
-            << " " << pd_integ[Ninp-1]
-            << " " << rhod_integ[Ninp-1]
-            << " " << theta_inp_sound[Ninp-1]
-            << " " << U_inp_sound[Ninp-1]
-            << " " << V_inp_sound[Ninp-1]
+        amrex::Print() << std::fixed
+            << std::setprecision(8)
+            << z_inp_sound[Nz-1]
+            << std::setprecision(17)
+            << " " << pd_integ[Nz-1]
+            << " " << rhod_integ[Nz-1]
+            << " " << theta_inp_sound[Nz-1]
+            << " " << U_inp_sound[Nz-1]
+            << " " << V_inp_sound[Nz-1]
             << std::endl;
-        for (int k=Ninp-2; k >= 0; --k)
+        for (int k=Nz-2; k >= 0; --k) // start with Nz-2, the highest interior cell (at zhi-dz/2)
+                                      // k=1 correseponds to the lowest interior cell (at zlo+dz/2)
+                                      // k=0 corresponds to zlo
         {
             dz = z_inp_sound[k+1] - z_inp_sound[k];
             rhod_integ[k] = rhod_integ[k+1]; // guess
@@ -194,7 +201,10 @@ public:
                 rhod_integ[k] = 1 / (
                     R_d/p_0 * theta_inp_sound[k] * std::pow(pd_integ[k]/p_0, -iGamma));
             }
-            amrex::Print() << z_inp_sound[k]
+            amrex::Print() << std::fixed
+                << std::setprecision(8)
+                << z_inp_sound[k]
+                << std::setprecision(17)
                 << " " << pd_integ[k]
                 << " " << rhod_integ[k]
                 << " " << theta_inp_sound[k]

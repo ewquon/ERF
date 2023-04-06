@@ -46,7 +46,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
                        const Gpu::DeviceVector<amrex::BCRec>& domain_bcs_type_d,
                        const Vector<amrex::BCRec>& domain_bcs_type,
                        std::unique_ptr<MultiFab>& z_phys_nd, std::unique_ptr<MultiFab>& dJ,
-                       const MultiFab* p0,
+                       const MultiFab* p0, const MultiFab* r0,
                        std::unique_ptr<MultiFab>& mapfac_m,
                        std::unique_ptr<MultiFab>& mapfac_u,
                        std::unique_ptr<MultiFab>& mapfac_v,
@@ -489,6 +489,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 
         // Base state
         const Array4<const Real>& p0_arr = p0->const_array(mfi);
+        const Array4<const Real>& r0_arr = r0->const_array(mfi);
 
         //-----------------------------------------
         // Perturbational pressure field
@@ -769,7 +770,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 #endif
             rho_u_rhs(i, j, k) += -gpx / (1.0 + q)
                                 - solverChoice.abl_pressure_grad[0]
-                                + 0.5*(cell_data(i,j,k,Rho_comp)+cell_data(i-1,j,k,Rho_comp)) * solverChoice.abl_geo_forcing[0];
+                                + r0_arr(i,j,k) * solverChoice.abl_geo_forcing[0];
 
             // Add Coriolis forcing (that assumes east is +x, north is +y)
             if (solverChoice.use_coriolis)
@@ -813,7 +814,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 #endif
               rho_u_rhs(i, j, k) += -gpx / (1.0 + q)
                                   - solverChoice.abl_pressure_grad[0]
-                                  + 0.5*(cell_data(i,j,k,Rho_comp)+cell_data(i-1,j,k,Rho_comp)) * solverChoice.abl_geo_forcing[0];
+                                  + r0_arr(i,j,k) * solverChoice.abl_geo_forcing[0];
 
               // Add Coriolis forcing (that assumes east is +x, north is +y)
               if (solverChoice.use_coriolis)
@@ -877,7 +878,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 #endif
               rho_v_rhs(i, j, k) += -gpy / (1.0_rt + q)
                                   - solverChoice.abl_pressure_grad[1]
-                                  + 0.5*(cell_data(i,j,k,Rho_comp)+cell_data(i,j-1,k,Rho_comp)) * solverChoice.abl_geo_forcing[1];
+                                  + r0_arr(i,j,k) * solverChoice.abl_geo_forcing[1];
 
               // Add Coriolis forcing (that assumes east is +x, north is +y) if (solverChoice.use_coriolis)
               {
@@ -918,7 +919,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 #endif
               rho_v_rhs(i, j, k) += -gpy / (1.0_rt + q)
                                   - solverChoice.abl_pressure_grad[1]
-                                  + 0.5*(cell_data(i,j,k,Rho_comp)+cell_data(i,j-1,k,Rho_comp)) * solverChoice.abl_geo_forcing[1];
+                                  + r0_arr(i,j,k) * solverChoice.abl_geo_forcing[1];
 
               // Add Coriolis forcing (that assumes east is +x, north is +y)
               if (solverChoice.use_coriolis)
@@ -971,7 +972,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 #endif
                 rho_w_rhs(i, j, k) += (buoyancy_fab(i,j,k) - gpz) / (1.0_rt + q)
                                     - solverChoice.abl_pressure_grad[2]
-                                    + 0.5*(cell_data(i,j,k,Rho_comp)+cell_data(i,j,k-1,Rho_comp)) * solverChoice.abl_geo_forcing[2];
+                                    + r0_arr(i,j,k) * solverChoice.abl_geo_forcing[2];
 
                 // Add Coriolis forcing (that assumes east is +x, north is +y)
                 if (solverChoice.use_coriolis)
@@ -1012,7 +1013,7 @@ void erf_slow_rhs_pre (int /*level*/, int nrk,
 #endif
                 rho_w_rhs(i, j, k) += (buoyancy_fab(i,j,k) - gpz) / (1.0_rt + q)
                                     - solverChoice.abl_pressure_grad[2]
-                                    + 0.5*(cell_data(i,j,k,Rho_comp)+cell_data(i,j,k-1,Rho_comp)) * solverChoice.abl_geo_forcing[2];
+                                    + r0_arr(i,j,k) * solverChoice.abl_geo_forcing[2];
 
                 // Add Coriolis forcing (that assumes east is +x, north is +y)
                 if (solverChoice.use_coriolis)

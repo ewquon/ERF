@@ -79,14 +79,14 @@ public:
                 iss_z >> z >> theta >> qv >> U >> V;
                 if (z == 0) {
                     AMREX_ALWAYS_ASSERT(theta == theta_inp_sound_tmp[0]);
-                    AMREX_ALWAYS_ASSERT(qv == qv_inp_sound_tmp[0]);
+                    AMREX_ALWAYS_ASSERT(qv*0.001 == qv_inp_sound_tmp[0]); // convert from g/kg to kg/kg
                     U_inp_sound_tmp[0] = U;
                     V_inp_sound_tmp[0] = V;
                 } else {
                     AMREX_ALWAYS_ASSERT(z > z_inp_sound[z_inp_sound_tmp.size()-1]); // sounding is increasing in height
                     z_inp_sound_tmp.push_back(z);
                     theta_inp_sound_tmp.push_back(theta);
-                    qv_inp_sound_tmp.push_back(qv*0.001);
+                    qv_inp_sound_tmp.push_back(qv*0.001); // convert from g/kg to kg/kg
                     U_inp_sound_tmp.push_back(U);
                     V_inp_sound_tmp.push_back(V);
                     if (z >= ztop) break;

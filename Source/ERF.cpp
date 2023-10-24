@@ -568,6 +568,14 @@ ERF::InitData ()
             m_most->update_mac_ptrs(lev, vars_new, Theta_prim);
             m_most->update_fluxes(lev,t_new[lev]);
         }
+
+        if (solverChoice.use_terrain) {
+            amrex::Print() << "Note: use_terrain==true with MOST"
+                << ", geom[0].CellSize(2)==" << geom[0].CellSize(2)
+                << " -- dz should match the first cell spacing, otherwise the"
+                << " MOST BC may diagnose an incorrect flux... Use with care!!!"
+                << std::endl;
+        }
     }
 
     if (solverChoice.use_rayleigh_damping)

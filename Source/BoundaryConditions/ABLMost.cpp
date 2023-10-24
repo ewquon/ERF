@@ -175,6 +175,7 @@ ABLMost::compute_most_bcs (const int lev,
 
             if (var_idx == Vars::cons) {
                 Box b2d = bx;
+                b2d.setSmall(2,zlo-1);
                 b2d.setBig(2,zlo-1);
                 int n = Cons::RhoTheta;
 
@@ -190,6 +191,7 @@ ABLMost::compute_most_bcs (const int lev,
             } else if (var_idx == Vars::xvel || var_idx == Vars::xmom) {
 
                 Box xb2d = surroundingNodes(bx,0);
+                xb2d.setSmall(2,zlo-1);
                 xb2d.setBig(2,zlo-1);
 
                 ParallelFor(xb2d, [=] AMREX_GPU_DEVICE (int i, int j, int k)
@@ -204,6 +206,7 @@ ABLMost::compute_most_bcs (const int lev,
             } else if (var_idx == Vars::yvel || var_idx == Vars::ymom) {
 
                 Box yb2d = surroundingNodes(bx,1);
+                yb2d.setSmall(2,zlo-1);
                 yb2d.setBig(2,zlo-1);
 
                 ParallelFor(yb2d, [=] AMREX_GPU_DEVICE (int i, int j, int k)

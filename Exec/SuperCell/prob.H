@@ -65,7 +65,8 @@ public:
         amrex::Vector<amrex::Real>& vbar,
         amrex::Vector<amrex::Real>& wbar,
         amrex::Vector<amrex::Real>& thetabar,
-        amrex::Geometry      const& geom) override;
+        amrex::Geometry            const& geom,
+        amrex::Vector<amrex::Real> const& zlevels_stag) override;
 
 protected:
     std::string name() override { return "Supercell"; }

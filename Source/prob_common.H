@@ -132,12 +132,13 @@ public:
     /**
      * Function to define the quantities needed to impose Rayleigh damping
      *
-     * @param[in] tau  strength of Rayleigh damping
-     * @param[in] ubar reference value for x-velocity used to define Rayleigh damping
-     * @param[in] vbar reference value for y-velocity used to define Rayleigh damping
-     * @param[in] wbar reference value for z-velocity used to define Rayleigh damping
-     * @param[in] thetabar reference value for potential temperature used to define Rayleigh damping
+     * @param[out] tau  strength of Rayleigh damping
+     * @param[out] ubar reference value for x-velocity used to define Rayleigh damping
+     * @param[out] vbar reference value for y-velocity used to define Rayleigh damping
+     * @param[out] wbar reference value for z-velocity used to define Rayleigh damping
+     * @param[out] thetabar reference value for potential temperature used to define Rayleigh damping
      * @param[in] geom container for geometric information
+     * @param[in] z_phys_nd height coordinate at nodes
     */
     virtual void
     erf_init_rayleigh (amrex::Vector<amrex::Real>& /*tau*/,
@@ -145,7 +146,8 @@ public:
                        amrex::Vector<amrex::Real>& /*vbar*/,
                        amrex::Vector<amrex::Real>& /*wbar*/,
                        amrex::Vector<amrex::Real>& /*thetabar*/,
-                       amrex::Geometry      const& /*geom*/)
+                       amrex::Geometry            const& /*geom*/,
+                       amrex::Vector<amrex::Real> const& /*zlevels_stag*/)
     {
         amrex::Error("Should never call erf_init_rayleigh for "+name()+" problem");
     }

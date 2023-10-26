@@ -43,8 +43,15 @@ ERF::initRayleigh()
         h_rayleigh_thetabar[lev].resize(zlen_rayleigh, 0.0_rt);
         d_rayleigh_thetabar[lev].resize(zlen_rayleigh, 0.0_rt);
 
+        // Assume that near the domain top where the damping layer would be
+        // applied, the points are far enough away from the surface that the
+        // grid stretching is uniform in the horizontal directions and vertical
+        // points are described by zlevels_stag.
+        const auto nominal_z_levels = (solverChoice.use_terrain) ? zlevels_stag : amrex::Vector<Real>{};
+
         prob->erf_init_rayleigh(h_rayleigh_tau[lev], h_rayleigh_ubar[lev], h_rayleigh_vbar[lev],
-                          h_rayleigh_wbar[lev], h_rayleigh_thetabar[lev], geom[lev]);
+                                h_rayleigh_wbar[lev], h_rayleigh_thetabar[lev], geom[lev],
+                                nominal_z_levels);
 
         // Copy from host version to device version
         amrex::Gpu::copy(amrex::Gpu::hostToDevice, h_rayleigh_tau[lev].begin(), h_rayleigh_tau[lev].end(),

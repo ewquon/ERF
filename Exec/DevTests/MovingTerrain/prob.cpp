@@ -147,7 +147,8 @@ Problem::erf_init_rayleigh(
     amrex::Vector<Real>& vbar,
     amrex::Vector<Real>& wbar,
     amrex::Vector<Real>& thetabar,
-    amrex::Geometry      const& geom)
+    amrex::Geometry     const& geom,
+    amrex::Vector<Real> const& /*zlevels_stag*/)
 {
    // amrex::Error("Should never get here for MovingTerrain problem");
    const int khi = geom.Domain().bigEnd()[2];

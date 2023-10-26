@@ -259,7 +259,8 @@ Problem::erf_init_rayleigh(
     amrex::Vector<amrex::Real>& vbar,
     amrex::Vector<amrex::Real>& wbar,
     amrex::Vector<amrex::Real>& thetabar,
-    amrex::Geometry      const& geom)
+    amrex::Geometry            const& geom,
+    amrex::Vector<amrex::Real> const& /*zlevels_stag*/)
 {
   const int khi = geom.Domain().bigEnd()[2];
 

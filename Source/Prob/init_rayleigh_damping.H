@@ -8,20 +8,27 @@ erf_init_rayleigh (amrex::Vector<amrex::Real>& tau,
                    amrex::Vector<amrex::Real>& vbar,
                    amrex::Vector<amrex::Real>& wbar,
                    amrex::Vector<amrex::Real>& thetabar,
-                   amrex::Geometry      const& geom) override
+                   amrex::Geometry            const& geom,
+                   amrex::Vector<amrex::Real> const& zlevels_stag) override
 {
-    const auto ztop = geom.ProbHi()[2];
+    const int klo = 0;
+    const int khi = geom.Domain().bigEnd()[2];
+
+    bool use_terrain = (zlevels_stag.size() > 0);
+
+    const auto ztop = (use_terrain) ? zlevels_stag[khi+1] : geom.ProbHi()[2];
     amrex::Print() << "Rayleigh damping (coef="<<parms.dampcoef<<" s^-1)"
         << " between " << ztop-parms.zdamp << " and " << ztop << " m"
+        << " with use_terrain=" << use_terrain
         << std::endl;
 
     const amrex::Real* prob_lo = geom.ProbLo();
     const auto dx              = geom.CellSize();
-    const int khi              = geom.Domain().bigEnd()[2];
 
     for (int k = 0; k <= khi; k++)
     {
-        const amrex::Real z = prob_lo[2] + (k + 0.5) * dx[2];
+        const amrex::Real z = (use_terrain) ? 0.5*(zlevels_stag[k] + zlevels_stag[k+1])
+                                            : prob_lo[2] + (k + 0.5) * dx[2];
         const amrex::Real zfrac = 1 - (ztop - z) / parms.zdamp;
         if (zfrac >= 0)
         {

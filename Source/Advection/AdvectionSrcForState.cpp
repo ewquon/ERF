@@ -3,6 +3,7 @@
 #include <Advection.H>
 #include <AdvectionSrcForState_N.H>
 #include <AdvectionSrcForState_T.H>
+#include <Interpolation_1D.H>
 
 using namespace amrex;
 
@@ -341,5 +342,69 @@ AdvectionSrcForScalars (const Box& bx, const int icomp, const int ncomp,
         } else {
             AMREX_ASSERT_WITH_MESSAGE(false, "Unknown advection scheme!");
         }
+    }
+}
+
+/**
+ * Function for computing the advective tendency for the update equations for rho.
+ *
+ * We define rho on the z-face the same way as in MomentumToVelocity
+ *
+ * @param[in] bx box over which the scalars are updated
+ * @param[out] advectionSrc tendency for the scalar update equation
+ * @param[in] cell_data conserved scalar variables, to get density field
+ * @param[in] largescale_z levels of large-scale w profile
+ * @param[in] largescale_w large-scale profile of z-velocities 
+ * @param[in] z_nd height coordinate at nodes
+ * @param[in] detJ Jacobian of the metric transformation (= 1 if use_terrain is false)
+ * @param[in] cellSizeInv inverse of the mesh spacing
+ * @param[in] use_terrain if true, use the terrain-aware derivatives (with metric terms)
+ */
+
+void AdvectionSrcForLargeScale (const amrex::Box& bx,
+                                const amrex::Array4<amrex::Real>& advectionSrc,
+                                const amrex::Array4<const amrex::Real>& cell_data,
+                                const amrex::Gpu::DeviceVector<amrex::Real>& largescale_z,
+                                const amrex::Gpu::DeviceVector<amrex::Real>& largescale_w,
+                                const amrex::Array4<const amrex::Real>& z_nd,
+                                const amrex::Array4<const amrex::Real>& detJ,
+                                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& cellSizeInv,
+                                const amrex::Real problo_z,
+                                const int use_terrain)
+{
+    BL_PROFILE_VAR("AdvectionSrcForLargeScale", AdvectionSrcForLargeScale);
+    auto dzInv = cellSizeInv[2];
+    const int Ninp = largescale_z.size();
+    auto const *largescale_z_ptr = largescale_z.data();
+    auto const *largescale_w_ptr = largescale_w.data();
+
+    if (!use_terrain) {
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real rho_hi = 0.5 * (cell_data(i,j,k,Rho_comp) + cell_data(i,j,k+1,Rho_comp));
+            Real rho_lo = 0.5 * (cell_data(i,j,k,Rho_comp) + cell_data(i,j,k-1,Rho_comp));
+            Real z_hi = problo_z + (k+1) / dzInv;
+            Real z_lo = problo_z + (k  ) / dzInv;
+            Real w_interp_hi = interpolate_1d(largescale_z_ptr, largescale_w_ptr, z_hi, Ninp);
+            Real w_interp_lo = interpolate_1d(largescale_z_ptr, largescale_w_ptr, z_lo, Ninp);
+            advectionSrc(i,j,k,0) += (rho_hi * w_interp_hi - rho_lo * w_interp_lo) * dzInv;
+        });
+    } else {
+        ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+        {
+            Real rho_hi = 0.5 * (cell_data(i,j,k,Rho_comp) + cell_data(i,j,k+1,Rho_comp));
+            Real rho_lo = 0.5 * (cell_data(i,j,k,Rho_comp) + cell_data(i,j,k-1,Rho_comp));
+            Real z_hi = 0.25 * ( z_nd(i  ,j  ,k+1)
+                               + z_nd(i  ,j+1,k+1)
+                               + z_nd(i+1,j  ,k+1)
+                               + z_nd(i+1,j+1,k+1));
+            Real z_lo = 0.25 * ( z_nd(i  ,j  ,k  )
+                               + z_nd(i  ,j+1,k  )
+                               + z_nd(i+1,j  ,k  )
+                               + z_nd(i+1,j+1,k  ));
+            Real w_interp_hi = interpolate_1d(largescale_z_ptr, largescale_w_ptr, z_hi, Ninp);
+            Real w_interp_lo = interpolate_1d(largescale_z_ptr, largescale_w_ptr, z_lo, Ninp);
+            advectionSrc(i,j,k,0) += (rho_hi * w_interp_hi - rho_lo * w_interp_lo) * dzInv / detJ(i,j,k);
+        });
     }
 }

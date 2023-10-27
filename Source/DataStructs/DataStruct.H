@@ -122,6 +122,7 @@ struct SolverChoice {
         amrex::Vector<amrex::Real> largescale_z_in;
         amrex::Vector<amrex::Real> largescale_w_in;
         if(pp.queryarr("large_scale_levels",largescale_z_in)) {
+            add_largescale = true;
             pp.getarr("large_scale_zvelocity",largescale_w_in);
             AMREX_ASSERT_WITH_MESSAGE(( largescale_z_in.size() == largescale_w_in.size() ),
                                       "large_scale_zvelocity values must correspond to large_scale_levels");
@@ -328,6 +329,7 @@ struct SolverChoice {
     amrex::Real sinphi          = 0.0;
 
     // Large-scale (e.g., synoptic) forcing
+    bool add_largescale{false};
     amrex::Gpu::DeviceVector<amrex::Real> largescale_z;
     amrex::Gpu::DeviceVector<amrex::Real> largescale_w;
 

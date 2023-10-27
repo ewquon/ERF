@@ -23,7 +23,7 @@ void AdvectionSrcForRhoAndTheta (const amrex::Box& bx, const amrex::Box& valid_b
                                  const amrex::Array4<const amrex::Real>& cell_prim,
                                  const amrex::Array4<const amrex::Real>& z_nd,
                                  const amrex::Array4<const amrex::Real>& detJ,
-                                 const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& cellSize,
+                                 const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& cellSizeInv,
                                  const amrex::Array4<const amrex::Real>& mf_m,
                                  const amrex::Array4<const amrex::Real>& mf_u,
                                  const amrex::Array4<const amrex::Real>& mf_v,
@@ -39,10 +39,22 @@ void AdvectionSrcForScalars (const amrex::Box& bx,
                              const amrex::Array4<const amrex::Real>& cell_prim,
                              const amrex::Array4<amrex::Real>& src,
                              const amrex::Array4<const amrex::Real>& detJ,
-                             const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& cellSize,
+                             const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& cellSizeInv,
                              const amrex::Array4<const amrex::Real>& mf_m,
                              const AdvType horiz_adv_type, const AdvType vert_adv_type,
                              const int use_terrain);
+
+/** Compute advection tendency to represent large-scale motions in the continuity equation */
+void AdvectionSrcForLargeScale (const amrex::Box& bx,
+                                const amrex::Array4<amrex::Real>& src,
+                                const amrex::Array4<const amrex::Real>& cell_data,
+                                const amrex::Gpu::DeviceVector<amrex::Real>& largescale_z,
+                                const amrex::Gpu::DeviceVector<amrex::Real>& largescale_w,
+                                const amrex::Array4<const amrex::Real>& z_nd,
+                                const amrex::Array4<const amrex::Real>& detJ,
+                                const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& cellSizeInv,
+                                const amrex::Real problo_z,
+                                const int use_terrain);
 
 /** Compute advection tendencies for all components of momentum */
 void AdvectionSrcForMom (const amrex::Box& bxx, const amrex::Box& bxy, const amrex::Box& bxz,

@@ -131,11 +131,14 @@ void erf_slow_rhs_pre (int level,
                                     tc.pbl_type == PBLType::MYNN25      ||
                                     tc.pbl_type == PBLType::YSU );
 
+    const bool l_add_largescale = solverChoice.add_largescale;
+
     const amrex::BCRec* bc_ptr   = domain_bcs_type_d.data();
     const amrex::BCRec* bc_ptr_h = domain_bcs_type.data();
 
     const Box& domain = geom.Domain();
     const int domhi_z = domain.bigEnd()[2];
+    const Real problo_z = geom.ProbLo(2);
 
     const GpuArray<Real, AMREX_SPACEDIM> dxInv = geom.InvCellSizeArray();
 
@@ -637,6 +640,15 @@ void erf_slow_rhs_pre (int level,
                                    cell_prim, z_nd, detJ_arr,
                                    dxInv, mf_m, mf_u, mf_v,
                                    l_horiz_adv_type, l_vert_adv_type, l_use_terrain);
+
+        if (l_add_largescale) {
+            AdvectionSrcForLargeScale(bx, cell_rhs,
+                                      cell_data, // to get rho at faces
+                                      solverChoice.largescale_z, // to interpolate from
+                                      solverChoice.largescale_w, // to interpolate from
+                                      z_nd, detJ_arr, dxInv, problo_z,
+                                      l_use_terrain);
+        }
 
         if (l_use_diff) {
             Array4<Real> diffflux_x = dflux_x->array(mfi);

@@ -234,6 +234,16 @@ void ERF::init_bcs ()
             {
                m_bc_neumann_vals[BCVars::RhoTheta_bc_comp][ori] = theta_grad_in;
             }
+
+            // to specify subsidence through a top boundary -- should be used
+            // with a specified large_scale_zvelocity
+            std::vector<Real> v;
+            if (pp.queryarr("velocity", v, 0, AMREX_SPACEDIM))
+            {
+                m_bc_extdir_vals[BCVars::xvel_bc][ori] = v[0];
+                m_bc_extdir_vals[BCVars::yvel_bc][ori] = v[1];
+                m_bc_extdir_vals[BCVars::zvel_bc][ori] = v[2];
+            }
         }
         else if (bc_type == "most")
         {

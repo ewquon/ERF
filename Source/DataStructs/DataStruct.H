@@ -119,6 +119,30 @@ struct SolverChoice {
             amrex::Error("Don't know this abl_driver_type");
         }
 
+        amrex::Vector<amrex::Real> largescale_z_in;
+        amrex::Vector<amrex::Real> largescale_w_in;
+        if(pp.queryarr("large_scale_levels",largescale_z_in)) {
+            pp.getarr("large_scale_zvelocity",largescale_w_in);
+            AMREX_ASSERT_WITH_MESSAGE(( largescale_z_in.size() == largescale_w_in.size() ),
+                                      "large_scale_zvelocity values must correspond to large_scale_levels");
+            int nlevels = largescale_z_in.size();
+            amrex::Print() << "Specified large-scale conditions:" << std::endl;
+            for (int i = 0; i < nlevels; ++i) {
+                amrex::Print() << " " << largescale_z_in[i]
+                               << " " << largescale_w_in[i] << std::endl;
+            }
+            largescale_z.resize(nlevels);
+            largescale_w.resize(nlevels);
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             largescale_z_in.begin(),
+                             largescale_z_in.end(),
+                             largescale_z.begin());
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             largescale_w_in.begin(),
+                             largescale_w_in.end(),
+                             largescale_w.begin());
+        }
+
         amrex::Vector<amrex::Real> abl_pressure_grad_in = {0.0, 0.0, 0.0};
         pp.queryarr("abl_pressure_grad",abl_pressure_grad_in);
         for(int i = 0; i < AMREX_SPACEDIM; ++i) abl_pressure_grad[i] = abl_pressure_grad_in[i];
@@ -302,6 +326,10 @@ struct SolverChoice {
     amrex::Real coriolis_factor = 0.0;
     amrex::Real cosphi          = 0.0 ;
     amrex::Real sinphi          = 0.0;
+
+    // Large-scale (e.g., synoptic) forcing
+    amrex::Gpu::DeviceVector<amrex::Real> largescale_z;
+    amrex::Gpu::DeviceVector<amrex::Real> largescale_w;
 
     // Numerical diffusion
     bool use_NumDiff{false};

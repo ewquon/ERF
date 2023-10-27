@@ -71,6 +71,16 @@ ERF::initRayleigh()
  * Sets the Rayleigh Damping averaged quantities from an
  * externally supplied input sounding data file.
  *
+ * Notes:
+ * - This is only called if init_type=="input_sounding", in which the only
+ *   expected used case for "terrain" is grid stretching. Therefore, the height
+ *   coordinate at nodes depends only on the k index and is defined by
+ *   zlevels_stag.
+ * - This is always called after initRayleigh(), which calls the problem-
+ *   specific erf_init_rayleigh(). That will have calculated the tau damping
+ *   parameter and initialized the mean values ubar, vbar, wbar, and thetabar.
+ *   Here, we overwrite the mean values with values from the sounding.
+ *
  * @param[in] restarting Boolean parameter that indicates whether
                          we are currently restarting from a checkpoint file.
  */
@@ -81,7 +91,7 @@ ERF::setRayleighRefFromSounding(bool restarting)
     //    so we need to read it here
     // TODO: should we store this information in the checkpoint file instead?
     if (restarting) {
-        input_sounding_data.read_from_file(input_sounding_file, geom[0]);
+        input_sounding_data.read_from_file(input_sounding_file, geom[0], zlevels_stag);
     }
 
     const Real* z_inp_sound     = input_sounding_data.z_inp_sound.dataPtr();
@@ -98,7 +108,8 @@ ERF::setRayleighRefFromSounding(bool restarting)
 
         for (int k = 0; k <= khi; k++)
         {
-            const Real z = prob_lo[2] + (k + 0.5) * dx[2];
+            const Real z = (solverChoice.use_terrain) ? 0.5 * (zlevels_stag[k] + zlevels_stag[k+1])
+                                                      : prob_lo[2] + (k + 0.5) * dx[2];
             h_rayleigh_ubar[lev][k]     = interpolate_1d(z_inp_sound, U_inp_sound, z, inp_sound_size);
             h_rayleigh_vbar[lev][k]     = interpolate_1d(z_inp_sound, V_inp_sound, z, inp_sound_size);
             h_rayleigh_wbar[lev][k]     = 0.0;

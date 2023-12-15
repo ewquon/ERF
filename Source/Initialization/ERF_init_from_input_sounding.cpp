@@ -43,7 +43,7 @@ init_bx_velocities_from_input_sounding (const amrex::Box &bx,
  * @param lev Integer specifying the current level
  */
 void
-ERF::init_from_input_sounding(int lev)
+ERF::init_from_input_sounding (int lev)
 {
     // The expected use case for "terrain" here is grid stretching, so the
     // height coordinate at nodes only depends on the k index and is defined by

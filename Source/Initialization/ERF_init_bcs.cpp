@@ -216,6 +216,18 @@ void ERF::init_bcs ()
             {
                m_bc_neumann_vals[BCVars::RhoTheta_bc_comp][ori] = theta_grad_in;
             }
+
+            std::vector<Real> v;
+
+            // The values of m_bc_extdir_vals default to 0.
+            // But if we find "velocity" in the inputs file, use the normal
+            // velocity component -- expected use case is to model subsidence
+            if (pp.queryarr("velocity", v, 0, AMREX_SPACEDIM))
+            {
+                amrex::Print() << "Setting normal velocity (dir="<<ori.coordDir()<<")"
+                   << " on " << bcid << " boundary to " << v[ori.coordDir()] << std::endl;
+                m_bc_extdir_vals[BCVars::xvel_bc + ori.coordDir()][ori] = v[ori.coordDir()];
+            }
         }
         else if (bc_type == "most")
         {

@@ -10,6 +10,7 @@
 #include "EOS.H"
 #include "HSE_utils.H"
 #include "TileNoZ.H"
+#include "Interpolation_1D.H"
 
 struct ProbParmDefaults {
     amrex::Real rho_0 = 1.0;
@@ -248,13 +249,47 @@ public:
     */
     virtual void
     update_subsidence (const amrex::Real /*t*/,
-                       const amrex::Gpu::DeviceVector<amrex::Real>& /*subs_z*/,
-                       const amrex::Gpu::DeviceVector<amrex::Real>& /*subs_w*/,
-                       std::unique_ptr<amrex::MultiFab>& w_cc,
-                       const amrex::Geometry& /*geom*/,
-                       std::unique_ptr<amrex::MultiFab>& /*z_phys_cc*/)
+                       const amrex::Gpu::DeviceVector<amrex::Real>& subs_z,
+                       const amrex::Gpu::DeviceVector<amrex::Real>& subs_w,
+                       amrex::MultiFab& w_cc,
+                       const amrex::Geometry& geom,
+                       std::unique_ptr<amrex::MultiFab>& z_phys_cc)
     {
-        w_cc->setVal(0.0);
+        if (subs_w.empty()) {
+            w_cc.setVal(0.0);
+            return;
+        }
+
+        auto const *subs_z_ptr = subs_z.data();
+        auto const *subs_w_ptr = subs_w.data();
+        const int Ninp = subs_w.size();
+
+        const amrex::Real* prob_lo = geom.ProbLo();
+        const auto dx              = geom.CellSize();
+
+        for ( amrex::MFIter mfi(w_cc, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi ) {
+            amrex::Box bx = mfi.validbox();
+
+            amrex::Array4<amrex::Real> const& w_arr = w_cc.array(mfi);
+
+            if (z_phys_cc) {
+                amrex::Array4<const amrex::Real> const& z_arr = z_phys_cc->const_array(mfi);
+
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    w_arr(i,j,k) = interpolate_1d(subs_z_ptr, subs_w_ptr, z_arr(i,j,k), Ninp);
+                });
+
+            } else {
+
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    amrex::Real zcc = prob_lo[k] + (k+0.5)*dx[2];
+                    w_arr(i,j,k) = interpolate_1d(subs_z_ptr, subs_w_ptr, zcc, Ninp);
+                });
+
+            }
+        }
     }
 
     /**

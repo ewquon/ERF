@@ -45,6 +45,7 @@ void ERF::advance_dycore(int level,
     BL_PROFILE_VAR("erf_advance_dycore()",erf_advance_dycore);
     if (verbose) amrex::Print() << "Starting advance_dycore at level " << level << std::endl;
 
+    AdvChoice  ac = solverChoice.advChoice;
     DiffChoice dc = solverChoice.diffChoice;
     TurbChoice tc = solverChoice.turbChoice[level];
 
@@ -206,6 +207,20 @@ void ERF::advance_dycore(int level,
                                    h_rhoqt_src[level], d_rhoqt_src[level],
                                    fine_geom, z_phys_cc[level]);
     }
+
+    // ***********************************************************************************************
+    // Update large-scale subsidence field
+    //
+    // If add_subs_uv,add_subs_temp, and/or add_subs_scalars are set in advChoice
+    // ***********************************************************************************************
+    if (w_subs_cc[level]) {
+        prob->update_subsidence(old_time,
+                                ac.subs_z, ac.subs_w,
+                                *w_subs_cc[level],
+                                fine_geom,
+                                z_phys_cc[level]);
+    }
+
 
     // ***********************************************************************************************
     // Convert old velocity available on faces to old momentum on faces to be used in time integration

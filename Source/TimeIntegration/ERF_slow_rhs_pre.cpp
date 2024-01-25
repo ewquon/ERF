@@ -55,6 +55,7 @@ using namespace amrex;
  * @param[in]  domain_bcs_type_d device vector for domain boundary conditions
  * @param[in]  domain_bcs_type     host vector for domain boundary conditions
  * @param[in]  domain_bcs_type     host vector for domain boundary conditions
+ * @param[in] w_subs_cc subsidence field at cell centers
  * @param[in] z_phys_nd height coordinate at nodes
  * @param[in] detJ Jacobian of the metric transformation (= 1 if use_terrain is false)
  * @param[in]  p0     Reference (hydrostatically stratified) pressure
@@ -96,6 +97,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
                        std::unique_ptr<ABLMost>& most,
                        const Gpu::DeviceVector<amrex::BCRec>& domain_bcs_type_d,
                        const Vector<amrex::BCRec>& domain_bcs_type,
+                       std::unique_ptr<MultiFab>& w_subs_cc,
                        std::unique_ptr<MultiFab>& z_phys_nd, std::unique_ptr<MultiFab>& detJ,
                        const MultiFab* p0,
                        std::unique_ptr<MultiFab>& mapfac_m,

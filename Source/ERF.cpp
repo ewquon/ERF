@@ -212,6 +212,9 @@ ERF::ERF ()
     sst_lev.resize(nlevs_max);
     lmask_lev.resize(nlevs_max);
 
+    // Subsidence terms
+    w_subs_cc.resize(nlevs_max);
+
     // Metric terms
     z_phys_nd.resize(nlevs_max);
     z_phys_cc.resize(nlevs_max);

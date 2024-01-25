@@ -17,6 +17,7 @@ Problem::Problem(const amrex::Real* problo, const amrex::Real* probhi)
   pp.query("T_0", parms.T_0);
   pp.query("A_0", parms.A_0);
   pp.query("KE_0", parms.KE_0);
+  pp.query("scalar_size", parms.scalar_size);
   pp.query("QKE_0", parms.QKE_0);
   pp.query("KE_decay_height", parms.KE_decay_height);
   pp.query("KE_decay_order", parms.KE_decay_order);
@@ -111,8 +112,6 @@ Problem::init_custom_pert(
     const Real yc = 0.5 * (prob_lo[1] + prob_hi[1]);
     const Real zc = 0.5 * (prob_lo[2] + prob_hi[2]);
 
-    const Real r  = std::sqrt((x-xc)*(x-xc) + (y-yc)*(y-yc) + (z-zc)*(z-zc));
-
     // Add temperature perturbations
     if ((z <= parms.pert_ref_height) && (parms.T_0_Pert_Mag != 0.0)) {
         Real rand_double = amrex::Random(engine); // Between 0.0 and 1.0
@@ -123,8 +122,9 @@ Problem::init_custom_pert(
         }
     }
 
-    // Set scalar = A_0*exp(-10r^2), where r is distance from center of domain
-    state(i, j, k, RhoScalar_comp) = parms.A_0 * exp(-10.*r*r);
+    // Set scalar = A_0*exp(-(r/scalar_size)^2), where r is distance from center of domain
+    const Real r2  = ((x-xc)*(x-xc) + (y-yc)*(y-yc) + (z-zc)*(z-zc)) / (parms.scalar_size*parms.scalar_size);
+    state(i, j, k, RhoScalar_comp) = parms.A_0 * exp(-0.5*r2);
 
     // Set an initial value for SGS KE
     if (state.nComp() > RhoKE_comp) {

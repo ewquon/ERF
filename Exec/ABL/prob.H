@@ -12,6 +12,7 @@ struct ProbParm : ProbParmDefaults {
   amrex::Real T_0   = 0.0;
   amrex::Real A_0   = 1.0;
   amrex::Real KE_0  = 0.1;
+  amrex::Real scalar_size = 0.223606797749979; // exp(-0.5*(r/scalar_size)^2) = exp(-10*r*r)
   amrex::Real QKE_0 = 0.1;
 
   amrex::Real KE_decay_height = -1;

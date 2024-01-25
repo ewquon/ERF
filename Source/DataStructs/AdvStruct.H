@@ -190,6 +190,31 @@ struct AdvChoice {
         } else {
             amrex::Print() << "Using default moistscal_vert_adv_type" << std::endl;;
         }
+
+        // Subsidence source terms
+        amrex::Vector<amrex::Real> subs_z_in;
+        amrex::Vector<amrex::Real> subs_w_in;
+        if(pp.queryarr("subsidence_profile_w", subs_w_in)) {
+            pp.queryarr("subsidence_profile_z", subs_z_in);
+            AMREX_ALWAYS_ASSERT(subs_z_in.size() == subs_w_in.size());
+
+            if (subs_w_in.size() > 0) {
+                const int Ninp = subs_w_in.size();
+
+                amrex::Print() << "Input subsidence profile:" << std::endl;
+                for (int k=0; k < Ninp; k++) {
+                    amrex::Print() << "  " << subs_z_in[k] << " " << subs_w_in[k] << std::endl;
+                }
+
+                subs_z.resize(Ninp);
+                subs_w.resize(Ninp);
+                amrex::Gpu::copy(amrex::Gpu::hostToDevice, subs_z_in.begin(), subs_z_in.end(), subs_z.begin());
+                amrex::Gpu::copy(amrex::Gpu::hostToDevice, subs_w_in.begin(), subs_w_in.end(), subs_w.begin());
+            }
+        }
+        pp.query("add_subsidence_to_momenta", add_subs_uv);
+        pp.query("add_subsidence_to_temperature", add_subs_temp);
+        pp.query("add_subsidence_to_scalars", add_subs_scalars);
     }
 
     void display()
@@ -292,5 +317,12 @@ struct AdvChoice {
     amrex::Real dryscal_vert_upw_frac    = 1.0;
     amrex::Real moistscal_horiz_upw_frac = 1.0;
     amrex::Real moistscal_vert_upw_frac  = 1.0;
+
+    // Modeled subsidence
+    bool add_subs_uv = false;
+    bool add_subs_temp = false;
+    bool add_subs_scalars = false;
+    amrex::Gpu::DeviceVector<amrex::Real> subs_z;
+    amrex::Gpu::DeviceVector<amrex::Real> subs_w;
 };
 #endif

@@ -237,6 +237,27 @@ public:
     }
 
     /**
+     * Function to update the large-scale subsidence field
+     *
+     * @param[in]  t         current time
+     * @param[in]  subs_z    user-input subsidence profile heights
+     * @param[in]  subs_w    user-input subsidence profile vertical velocities
+     * @param[out] w_cc      large-scale vertical velocity at cell-center heights
+     * @param[in]  geom      container for geometric information
+     * @param[in]  z_phys_cc height coordinate at cell centers
+    */
+    virtual void
+    update_subsidence (const amrex::Real /*t*/,
+                       const amrex::Gpu::DeviceVector<amrex::Real>& /*subs_z*/,
+                       const amrex::Gpu::DeviceVector<amrex::Real>& /*subs_w*/,
+                       std::unique_ptr<amrex::MultiFab>& w_cc,
+                       const amrex::Geometry& /*geom*/,
+                       std::unique_ptr<amrex::MultiFab>& /*z_phys_cc*/)
+    {
+        w_cc->setVal(0.0);
+    }
+
+    /**
      * Function to set uniform background density and pressure fields
     */
     void

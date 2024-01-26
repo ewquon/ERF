@@ -240,23 +240,23 @@ public:
     /**
      * Function to update the large-scale subsidence field
      *
-     * @param[in]  t         current time
-     * @param[in]  subs_z    user-input subsidence profile heights
-     * @param[in]  subs_w    user-input subsidence profile vertical velocities
-     * @param[out] w_cc      large-scale vertical velocity at cell-center heights
-     * @param[in]  geom      container for geometric information
-     * @param[in]  z_phys_cc height coordinate at cell centers
+     * @param[in]  t      current time
+     * @param[in]  subs_z user-input subsidence profile heights
+     * @param[in]  subs_w user-input subsidence profile vertical velocities
+     * @param[out] w_ls   large-scale vertical velocity field
+     * @param[in]  geom   container for geometric information
+     * @param[in]  z_phys height coordinate at cell centers or nodes, corresponding to w_ls
     */
     virtual void
     update_subsidence (const amrex::Real /*t*/,
                        const amrex::Gpu::DeviceVector<amrex::Real>& subs_z,
                        const amrex::Gpu::DeviceVector<amrex::Real>& subs_w,
-                       amrex::MultiFab& w_cc,
+                       amrex::MultiFab& w_ls,
                        const amrex::Geometry& geom,
-                       std::unique_ptr<amrex::MultiFab>& z_phys_cc)
+                       std::unique_ptr<amrex::MultiFab>& z_phys)
     {
         if (subs_w.empty()) {
-            w_cc.setVal(0.0);
+            w_ls.setVal(0.0);
             return;
         }
 
@@ -267,13 +267,13 @@ public:
         const amrex::Real* prob_lo = geom.ProbLo();
         const auto dx              = geom.CellSize();
 
-        for ( amrex::MFIter mfi(w_cc, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi ) {
+        for ( amrex::MFIter mfi(w_ls, amrex::TilingIfNotGPU()); mfi.isValid(); ++mfi ) {
             amrex::Box bx = mfi.validbox();
 
-            amrex::Array4<amrex::Real> const& w_arr = w_cc.array(mfi);
+            amrex::Array4<amrex::Real> const& w_arr = w_ls.array(mfi);
 
-            if (z_phys_cc) {
-                amrex::Array4<const amrex::Real> const& z_arr = z_phys_cc->const_array(mfi);
+            if (z_phys) {
+                amrex::Array4<const amrex::Real> const& z_arr = z_phys->const_array(mfi);
 
                 ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
                 {

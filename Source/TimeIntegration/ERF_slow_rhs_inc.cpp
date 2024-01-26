@@ -206,9 +206,6 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
             const Array4<Real const>& mu_turb = l_use_turb ? eddyDiffs->const_array(mfi) : Array4<const Real>{};
             const Array4<Real const>& cell_data = l_use_constAlpha ? S_data[IntVars::cons].const_array(mfi) : Array4<const Real>{};
 
-            // Subsidence field
-            const Array4<Real const>& w_subs_arr = l_add_subs_temp ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
-
             // Terrain metrics
             const Array4<const Real>& z_nd     = l_use_terrain ? z_phys_nd->const_array(mfi) : Array4<const Real>{};
             const Array4<const Real>& detJ_arr = l_use_terrain ?      detJ->const_array(mfi) : Array4<const Real>{};
@@ -524,6 +521,9 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
         const Array4<const Real>& rho_u_old = S_old[IntVars::xmom].array(mfi);
         const Array4<const Real>& rho_v_old = S_old[IntVars::ymom].array(mfi);
         const Array4<const Real>& rho_w_old = S_old[IntVars::zmom].array(mfi);
+
+        // Subsidence field
+        const Array4<Real const>& w_subs_arr = (l_add_subs_mom || l_add_subs_temp) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
         // Map factors
         const Array4<const Real>& mf_m   = mapfac_m->const_array(mfi);

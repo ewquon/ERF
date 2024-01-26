@@ -211,7 +211,7 @@ void ERF::advance_dycore(int level,
     // ***********************************************************************************************
     // Update large-scale subsidence field
     //
-    // If add_subs_uv,add_subs_temp, and/or add_subs_scalars are set in advChoice
+    // If add_subs_mom, add_subs_temp, add_subs_moist, and/or add_subs_scalar are set in advChoice
     // ***********************************************************************************************
     if (w_subs_cc[level]) {
         prob->update_subsidence(old_time,

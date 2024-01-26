@@ -100,9 +100,10 @@ void ERF::MakeNewLevelFromScratch (int lev, Real time, const BoxArray& ba,
     base_state[lev].define(ba,dm,3,1);
     base_state[lev].setVal(0.);
 
-    if (solverChoice.advChoice.add_subs_uv ||
+    if (solverChoice.advChoice.add_subs_mom ||
         solverChoice.advChoice.add_subs_temp ||
-        solverChoice.advChoice.add_subs_scalars)
+        solverChoice.advChoice.add_subs_moist ||
+        solverChoice.advChoice.add_subs_scalar)
     {
         w_subs_cc[lev] = std::make_unique<MultiFab>(ba,dm,1,0);
     }

@@ -212,10 +212,10 @@ struct AdvChoice {
                 amrex::Gpu::copy(amrex::Gpu::hostToDevice, subs_w_in.begin(), subs_w_in.end(), subs_w.begin());
             }
         }
-        pp.query("add_subsidence_to_momenta", add_subs_uv);
+        pp.query("add_subsidence_to_momenta"    , add_subs_mom);
         pp.query("add_subsidence_to_temperature", add_subs_temp);
-        pp.query("add_subsidence_to_moisture", add_subs_moist);
-        pp.query("add_subsidence_to_scalars", add_subs_scalars);
+        pp.query("add_subsidence_to_moisture"   , add_subs_moist);
+        pp.query("add_subsidence_to_scalars"    , add_subs_scalar);
     }
 
     void display()
@@ -320,10 +320,10 @@ struct AdvChoice {
     amrex::Real moistscal_vert_upw_frac  = 1.0;
 
     // Modeled subsidence
-    bool add_subs_uv = false;
+    bool add_subs_mom = false;
     bool add_subs_temp = false;
     bool add_subs_moist = false;
-    bool add_subs_scalars = false;
+    bool add_subs_scalar = false;
     amrex::Gpu::DeviceVector<amrex::Real> subs_z;
     amrex::Gpu::DeviceVector<amrex::Real> subs_w;
 };

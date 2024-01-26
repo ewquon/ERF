@@ -124,6 +124,9 @@ AdvectionSrcForRho (const Box& bx,
  * @param[in] horiz_upw_frac upwinding fraction to be used in horiz. directions for dry scalars (for Blended schemes only)
  * @param[in] vert_upw_frac upwinding fraction to be used in vert. directions for dry scalars (for Blended schemes only)
  * @param[in] use_terrain if true, use the terrain-aware derivatives (with metric terms)
+ * @param[in] add_subs_temp if true, add subsidence source terms to the temperature equation
+ * @param[in] add_subs_scalars if true, add subsidence source terms to the scalar transport equations
+ * @param[in] w_subs_arr subsidence field
  */
 
 void
@@ -141,6 +144,9 @@ AdvectionSrcForScalars (const Box& bx, const int icomp, const int ncomp,
                         const Real horiz_upw_frac,
                         const Real vert_upw_frac,
                         const bool use_terrain,
+                        const bool add_subs_temp,
+                        const bool add_subs_scalars,
+                        const Array4<const Real>& w_subs_arr,
                         const GpuArray<const Array4<Real>, AMREX_SPACEDIM>& flx_arr)
 {
     BL_PROFILE_VAR("AdvectionSrcForScalars", AdvectionSrcForScalars);
@@ -247,4 +253,10 @@ AdvectionSrcForScalars (const Box& bx, const int icomp, const int ncomp,
           ( (flx_arr[1])(i,j+1,k,cons_index) - (flx_arr[1])(i,j  ,k,cons_index) ) * dyInv +
           ( (flx_arr[2])(i,j,k+1,cons_index) - (flx_arr[2])(i,j,k  ,cons_index) ) * dzInv );
     });
+
+    // add tendencies for subsidence
+    if (add_subs_temp) {
+    }
+    if (add_subs_scalars) {
+    }
 }

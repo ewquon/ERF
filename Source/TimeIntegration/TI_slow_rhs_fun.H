@@ -308,6 +308,7 @@
                               source, SmnSmn, eddyDiffs,
                               Hfx3, Diss,
                               fine_geom, solverChoice, m_most, domain_bcs_type_d,
+                              w_subs_cc[level],
                               z_phys_nd_src[level], detJ_cc[level], detJ_cc_new[level],
                               mapfac_m[level], mapfac_u[level], mapfac_v[level],
 #if defined(ERF_USE_NETCDF)
@@ -324,6 +325,7 @@
                               source, SmnSmn, eddyDiffs,
                               Hfx3, Diss,
                               fine_geom, solverChoice, m_most, domain_bcs_type_d,
+                              w_subs_cc[level],
                               z_phys_nd[level], detJ_cc[level], detJ_cc[level],
                               mapfac_m[level], mapfac_u[level], mapfac_v[level],
 #if defined(ERF_USE_NETCDF)

@@ -38,6 +38,7 @@ using namespace amrex;
  * @param[in]  solverChoice  Container for solver parameters
  * @param[in]  most  Pointer to MOST class for Monin-Obukhov Similarity Theory boundary condition
  * @param[in]  domain_bcs_type_d device vector for domain boundary conditions
+ * @param[in] w_subs_cc subsidence field at cell centers
  * @param[in] z_phys_nd height coordinate at nodes
  * @param[in] detJ     Jacobian of the metric transformation at start of time step (= 1 if use_terrain is false)
  * @param[in] detJ_new Jacobian of the metric transformation at new RK stage time (= 1 if use_terrain is false)
@@ -68,6 +69,7 @@ void erf_slow_rhs_post (int level, int finest_level,
                         const SolverChoice& solverChoice,
                         std::unique_ptr<ABLMost>& most,
                         const Gpu::DeviceVector<amrex::BCRec>& domain_bcs_type_d,
+                        std::unique_ptr<MultiFab>& w_subs_cc,
                         std::unique_ptr<MultiFab>& z_phys_nd,
                         std::unique_ptr<MultiFab>& detJ,
                         std::unique_ptr<MultiFab>& detJ_new,
@@ -100,6 +102,8 @@ void erf_slow_rhs_post (int level, int finest_level,
     if (most) t_mean_mf = most->get_mac_avg(0,2);
 
     const bool l_use_terrain      = solverChoice.use_terrain;
+    const bool l_add_subs_temp    = ac.add_subs_temp;
+    const bool l_add_subs_scalars = ac.add_subs_scalars;
     const bool l_reflux = (solverChoice.coupling_type != CouplingType::OneWay);
     const bool l_moving_terrain   = (solverChoice.terrain_type == TerrainType::Moving);
     if (l_moving_terrain) AMREX_ALWAYS_ASSERT(l_use_terrain);
@@ -213,6 +217,9 @@ void erf_slow_rhs_post (int level, int finest_level,
 
         const Array4<Real const>& mu_turb = l_use_turb ? eddyDiffs->const_array(mfi) : Array4<const Real>{};
 
+        // Subsidence field
+        const Array4<Real const>& w_subs_arr = (l_add_subs_temp || l_add_subs_scalars) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+
         // Metric terms
         const Array4<const Real>& z_nd         = l_use_terrain    ? z_phys_nd->const_array(mfi) : Array4<const Real>{};
         const Array4<const Real>& detJ_arr     = l_use_terrain    ? detJ->const_array(mfi)        : Array4<const Real>{};
@@ -282,7 +289,9 @@ void erf_slow_rhs_post (int level, int finest_level,
                                    cur_prim, cell_rhs, detJ_arr, dxInv, mf_m,
                                    horiz_adv_type, vert_adv_type,
                                    horiz_upw_frac, vert_upw_frac,
-                                   l_use_terrain, flx_arr);
+                                   l_use_terrain,
+                                   l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                                   flx_arr);
         }
         if (l_use_QKE) {
             start_comp = RhoQKE_comp;
@@ -291,7 +300,9 @@ void erf_slow_rhs_post (int level, int finest_level,
                                    cur_prim, cell_rhs, detJ_arr, dxInv, mf_m,
                                    horiz_adv_type, vert_adv_type,
                                    horiz_upw_frac, vert_upw_frac,
-                                   l_use_terrain, flx_arr);
+                                   l_use_terrain,
+                                   l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                                   flx_arr);
         }
 
         // This is simply an advected scalar for convenience
@@ -301,7 +312,9 @@ void erf_slow_rhs_post (int level, int finest_level,
                                cur_prim, cell_rhs, detJ_arr, dxInv, mf_m,
                                horiz_adv_type, vert_adv_type,
                                horiz_upw_frac, vert_upw_frac,
-                               l_use_terrain, flx_arr);
+                               l_use_terrain,
+                               l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                               flx_arr);
 
         if (solverChoice.moisture_type != MoistureType::None)
         {
@@ -322,7 +335,9 @@ void erf_slow_rhs_post (int level, int finest_level,
                                    cur_prim, cell_rhs, detJ_arr, dxInv, mf_m,
                                    moist_horiz_adv_type, moist_vert_adv_type,
                                    moist_horiz_upw_frac, moist_vert_upw_frac,
-                                   l_use_terrain, flx_arr);
+                                   l_use_terrain,
+                                   l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                                   flx_arr);
         }
 
         if (l_use_diff) {

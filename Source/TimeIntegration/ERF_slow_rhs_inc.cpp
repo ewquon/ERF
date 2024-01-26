@@ -55,6 +55,7 @@ using namespace amrex;
  * @param[in]  domain_bcs_type_d device vector for domain boundary conditions
  * @param[in]  domain_bcs_type     host vector for domain boundary conditions
  * @param[in]  domain_bcs_type     host vector for domain boundary conditions
+ * @param[in] w_subs_cc subsidence field at cell centers
  * @param[in] z_phys_nd height coordinate at nodes
  * @param[in] detJ Jacobian of the metric transformation (= 1 if use_terrain is false)
  * @param[in]  p0     Reference (hydrostatically stratified) pressure
@@ -92,6 +93,7 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
                        std::unique_ptr<ABLMost>& most,
                        const Gpu::DeviceVector<amrex::BCRec>& domain_bcs_type_d,
                        const Vector<amrex::BCRec>& domain_bcs_type,
+                       std::unique_ptr<MultiFab>& w_subs_cc,
                        std::unique_ptr<MultiFab>& z_phys_nd, std::unique_ptr<MultiFab>& detJ,
                        const MultiFab* p0,
                        std::unique_ptr<MultiFab>& mapfac_m,
@@ -103,6 +105,7 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
 {
     BL_PROFILE_REGION("erf_slow_rhs_pre()");
 
+    AdvChoice  ac = solverChoice.advChoice;
     DiffChoice dc = solverChoice.diffChoice;
     TurbChoice tc = solverChoice.turbChoice[level];
 
@@ -121,6 +124,9 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
     const bool l_use_terrain = solverChoice.use_terrain;
 
     AMREX_ALWAYS_ASSERT (!l_use_terrain);
+
+    const bool l_add_subs_temp    = ac.add_subs_temp;
+    const bool l_add_subs_scalars = ac.add_subs_scalars;
 
     const bool l_use_ndiff      = solverChoice.use_NumDiff;
     const bool l_use_diff       = ( (dc.molec_diff_type != MolecDiffType::None) ||
@@ -200,6 +206,9 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
             // Eddy viscosity
             const Array4<Real const>& mu_turb = l_use_turb ? eddyDiffs->const_array(mfi) : Array4<const Real>{};
             const Array4<Real const>& cell_data = l_use_constAlpha ? S_data[IntVars::cons].const_array(mfi) : Array4<const Real>{};
+
+            // Subsidence field
+            const Array4<Real const>& w_subs_arr = (l_add_subs_temp || l_add_subs_scalars) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
             // Terrain metrics
             const Array4<const Real>& z_nd     = l_use_terrain ? z_phys_nd->const_array(mfi) : Array4<const Real>{};
@@ -611,7 +620,9 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
                                cell_prim, cell_rhs, detJ_arr, dxInv, mf_m,
                                l_horiz_adv_type, l_vert_adv_type,
                                l_horiz_upw_frac, l_vert_upw_frac,
-                               l_use_terrain, flx_arr);
+                               l_use_terrain,
+                               l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                               flx_arr);
 
         if (l_use_diff) {
             Array4<Real> diffflux_x = dflux_x->array(mfi);

@@ -110,6 +110,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
 {
     BL_PROFILE_REGION("erf_slow_rhs_pre()");
 
+    AdvChoice  ac = solverChoice.advChoice;
     DiffChoice dc = solverChoice.diffChoice;
     TurbChoice tc = solverChoice.turbChoice[level];
 
@@ -120,13 +121,16 @@ void erf_slow_rhs_pre (int level, int finest_level,
     int   num_comp = 2;
     int   end_comp = start_comp + num_comp - 1;
 
-    const AdvType l_horiz_adv_type = solverChoice.advChoice.dycore_horiz_adv_type;
-    const AdvType l_vert_adv_type  = solverChoice.advChoice.dycore_vert_adv_type;
-    const Real    l_horiz_upw_frac = solverChoice.advChoice.dycore_horiz_upw_frac;
-    const Real    l_vert_upw_frac  = solverChoice.advChoice.dycore_vert_upw_frac;
+    const AdvType l_horiz_adv_type = ac.dycore_horiz_adv_type;
+    const AdvType l_vert_adv_type  = ac.dycore_vert_adv_type;
+    const Real    l_horiz_upw_frac = ac.dycore_horiz_upw_frac;
+    const Real    l_vert_upw_frac  = ac.dycore_vert_upw_frac;
     const bool    l_use_terrain    = solverChoice.use_terrain;
     const bool    l_moving_terrain = (solverChoice.terrain_type == TerrainType::Moving);
     if (l_moving_terrain) AMREX_ALWAYS_ASSERT (l_use_terrain);
+
+    const bool l_add_subs_temp    = ac.add_subs_temp;
+    const bool l_add_subs_scalars = ac.add_subs_scalars;
 
     const bool l_reflux = (solverChoice.coupling_type == CouplingType::TwoWay);
 
@@ -518,6 +522,9 @@ void erf_slow_rhs_pre (int level, int finest_level,
         const Array4<const Real>& rho_v = S_data[IntVars::ymom].array(mfi);
         const Array4<const Real>& rho_w = S_data[IntVars::zmom].array(mfi);
 
+        // Subsidence field
+        const Array4<Real const>& w_subs_arr = (l_add_subs_temp || l_add_subs_scalars) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+
         // Map factors
         const Array4<const Real>& mf_m   = mapfac_m->const_array(mfi);
         const Array4<const Real>& mf_u   = mapfac_u->const_array(mfi);
@@ -656,7 +663,9 @@ void erf_slow_rhs_pre (int level, int finest_level,
                                cell_prim, cell_rhs, detJ_arr, dxInv, mf_m,
                                l_horiz_adv_type, l_vert_adv_type,
                                l_horiz_upw_frac, l_vert_upw_frac,
-                               l_use_terrain, flx_arr);
+                               l_use_terrain,
+                               l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                               flx_arr);
 
         if (l_use_diff) {
             Array4<Real> diffflux_x = dflux_x->array(mfi);

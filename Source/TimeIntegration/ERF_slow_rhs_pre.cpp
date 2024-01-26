@@ -130,7 +130,6 @@ void erf_slow_rhs_pre (int level, int finest_level,
     if (l_moving_terrain) AMREX_ALWAYS_ASSERT (l_use_terrain);
 
     const bool l_add_subs_temp    = ac.add_subs_temp;
-    const bool l_add_subs_scalars = ac.add_subs_scalars;
 
     const bool l_reflux = (solverChoice.coupling_type == CouplingType::TwoWay);
 
@@ -523,7 +522,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
         const Array4<const Real>& rho_w = S_data[IntVars::zmom].array(mfi);
 
         // Subsidence field
-        const Array4<Real const>& w_subs_arr = (l_add_subs_temp || l_add_subs_scalars) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+        const Array4<Real const>& w_subs_arr = l_add_subs_temp ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
         // Map factors
         const Array4<const Real>& mf_m   = mapfac_m->const_array(mfi);

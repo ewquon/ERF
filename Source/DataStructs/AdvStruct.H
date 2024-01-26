@@ -214,6 +214,7 @@ struct AdvChoice {
         }
         pp.query("add_subsidence_to_momenta", add_subs_uv);
         pp.query("add_subsidence_to_temperature", add_subs_temp);
+        pp.query("add_subsidence_to_moisture", add_subs_moist);
         pp.query("add_subsidence_to_scalars", add_subs_scalars);
     }
 
@@ -321,6 +322,7 @@ struct AdvChoice {
     // Modeled subsidence
     bool add_subs_uv = false;
     bool add_subs_temp = false;
+    bool add_subs_moist = false;
     bool add_subs_scalars = false;
     amrex::Gpu::DeviceVector<amrex::Real> subs_z;
     amrex::Gpu::DeviceVector<amrex::Real> subs_w;

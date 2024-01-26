@@ -102,8 +102,8 @@ void erf_slow_rhs_post (int level, int finest_level,
     if (most) t_mean_mf = most->get_mac_avg(0,2);
 
     const bool l_use_terrain      = solverChoice.use_terrain;
-    const bool l_add_subs_temp    = ac.add_subs_temp;
     const bool l_add_subs_scalars = ac.add_subs_scalars;
+    const bool l_add_subs_moist   = ac.add_subs_moist;
     const bool l_reflux = (solverChoice.coupling_type != CouplingType::OneWay);
     const bool l_moving_terrain   = (solverChoice.terrain_type == TerrainType::Moving);
     if (l_moving_terrain) AMREX_ALWAYS_ASSERT(l_use_terrain);
@@ -218,7 +218,7 @@ void erf_slow_rhs_post (int level, int finest_level,
         const Array4<Real const>& mu_turb = l_use_turb ? eddyDiffs->const_array(mfi) : Array4<const Real>{};
 
         // Subsidence field
-        const Array4<Real const>& w_subs_arr = (l_add_subs_temp || l_add_subs_scalars) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+        const Array4<Real const>& w_subs_arr = (l_add_subs_scalars || l_add_subs_moist) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
         // Metric terms
         const Array4<const Real>& z_nd         = l_use_terrain    ? z_phys_nd->const_array(mfi) : Array4<const Real>{};

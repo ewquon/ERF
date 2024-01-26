@@ -126,7 +126,6 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
     AMREX_ALWAYS_ASSERT (!l_use_terrain);
 
     const bool l_add_subs_temp    = ac.add_subs_temp;
-    const bool l_add_subs_scalars = ac.add_subs_scalars;
 
     const bool l_use_ndiff      = solverChoice.use_NumDiff;
     const bool l_use_diff       = ( (dc.molec_diff_type != MolecDiffType::None) ||
@@ -208,7 +207,7 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
             const Array4<Real const>& cell_data = l_use_constAlpha ? S_data[IntVars::cons].const_array(mfi) : Array4<const Real>{};
 
             // Subsidence field
-            const Array4<Real const>& w_subs_arr = (l_add_subs_temp || l_add_subs_scalars) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+            const Array4<Real const>& w_subs_arr = l_add_subs_temp ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
             // Terrain metrics
             const Array4<const Real>& z_nd     = l_use_terrain ? z_phys_nd->const_array(mfi) : Array4<const Real>{};

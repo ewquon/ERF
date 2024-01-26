@@ -42,7 +42,7 @@ void AdvectionSrcForScalars (const amrex::Box& bx,
                              const AdvType horiz_adv_type, const AdvType vert_adv_type,
                              const amrex::Real horiz_upw_frac, const amrex::Real vert_upw_frac,
                              const bool use_terrain,
-                             const bool add_subs_temp, const bool add_subs_scalars,
+                             const bool add_subsidence,
                              const amrex::Array4<const amrex::Real>& w_subs_arr,
                              const amrex::GpuArray<const amrex::Array4<amrex::Real>, AMREX_SPACEDIM>& flx_arr);
 

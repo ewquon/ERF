@@ -70,11 +70,15 @@ void erf_fast_rhs_T (int step, int nrk,
 {
     BL_PROFILE_REGION("erf_fast_rhs_T()");
 
-    Real beta_1 = 0.5 * (1.0 - beta_s);  // multiplies explicit terms
-    Real beta_2 = 0.5 * (1.0 + beta_s);  // multiplies implicit terms
+    const Real beta_1 = 0.5 * (1.0 - beta_s);  // multiplies explicit terms
+    const Real beta_2 = 0.5 * (1.0 + beta_s);  // multiplies implicit terms
 
-    // How much do we project forward the (rho theta) that is used in the horizontal momentum equations
-    Real beta_d = 0.1;
+    // How much do we project forward the rho*theta that is used in the
+    // horizontal momentum equations. Note that WRF defines divergence damping
+    // in terms of a modified _pressure_ rather than rho*theta as is done here.
+    // To get an equivalent damping coefficient of 0.1, need to apply the EOS
+    //   (rho*theta) ~ const * p^(1/gamma)
+    const Real beta_d = 0.19306977288832503;
 
     const Real* dx = geom.CellSize();
     const GpuArray<Real, AMREX_SPACEDIM> dxInv = geom.InvCellSizeArray();
@@ -82,6 +86,7 @@ void erf_fast_rhs_T (int step, int nrk,
     Real dxi = dxInv[0];
     Real dyi = dxInv[1];
     Real dzi = dxInv[2];
+
     const auto& ba = S_stage_data[IntVar::cons].boxArray();
     const auto& dm = S_stage_data[IntVar::cons].DistributionMap();
 

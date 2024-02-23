@@ -380,28 +380,32 @@ DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
         });
     }
 
-    // Using Deardorff
+    // Using Deardorff -- should only end up here from erf_rhs_post
     if (l_use_deardorff && start_comp <= RhoKE_comp && end_comp >=RhoKE_comp) {
         int qty_index = RhoKE_comp;
         ParallelFor(bx,[=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
         {
-            // Add Buoyancy Source
-            // where the SGS buoyancy flux tau_{theta,i} = -KH * dtheta/dx_i,
-            // such that for dtheta/dz < 0, there is a positive (upward) heat
-            // flux; the TKE buoyancy production is then
+            // TKE buoyancy production
+            //
             //   B = g/theta_0 * tau_{theta,w}
-            // for a dry atmosphere (see, e.g., Sullivan et al 1994). To
-            // account for moisture, the Brunt-Vaisala frequency,
+            //
+            // E.g., see Sullivan et al 1994. The SGS buoyancy flux
+            // tau_{theta,i} = -KH * dtheta/dx_i is such that for dtheta/dz < 0,
+            // there is a positive (upward) heat flux.
+            //
+            // Note: To account for moisture, the Brunt-Vaisala frequency
             //   N^2 = g[1/theta * dtheta/dz + ...]
-            // **should** be a function of the water vapor and total water
-            // mixing ratios, depending on whether conditions are saturated or
-            // not (see the WRF model description, Skamarock et al 2019).
+            // should be a function of the water vapor and total water mixing
+            // ratios, depending on whether conditions are saturated or not
+            // (see the WRF model description, Skamarock et al 2019).
             cell_rhs(i,j,k,qty_index) += l_abs_g * l_inv_theta0 * hfx_z(i,j,k);
 
             // TKE shear production
+            //
             //   P = -tau_ij * S_ij = 2 * mu_turb * S_ij * S_ij
+            //
             // Note: This assumes that the horizontal and vertical diffusivities
-            // of momentum are equal
+            // of momentum are equal.
             cell_rhs(i,j,k,qty_index) += 2.0*mu_turb(i,j,k,EddyDiff::Mom_v) * SmnSmn_a(i,j,k);
 
             // TKE dissipation

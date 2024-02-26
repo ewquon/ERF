@@ -658,6 +658,36 @@ ERF::InitData ()
         }
     }
 
+    if (solverChoice.custom_rhou_forcing)
+    {
+        h_rhou_src.resize(max_level+1, amrex::Vector<Real>(0));
+        d_rhou_src.resize(max_level+1, amrex::Gpu::DeviceVector<Real>(0));
+        for (int lev = 0; lev <= finest_level; lev++)
+        {
+            const int domlen = geom[lev].Domain().length(2) + 1; // face centers
+            h_rhou_src[lev].resize(domlen, 0.0_rt);
+            d_rhou_src[lev].resize(domlen, 0.0_rt);
+            prob->update_rhou_sources(t_new[0],
+                                      h_rhou_src[lev], d_rhou_src[lev],
+                                      geom[lev], z_phys_cc[lev]);
+        }
+    }
+
+    if (solverChoice.custom_rhov_forcing)
+    {
+        h_rhov_src.resize(max_level+1, amrex::Vector<Real>(0));
+        d_rhov_src.resize(max_level+1, amrex::Gpu::DeviceVector<Real>(0));
+        for (int lev = 0; lev <= finest_level; lev++)
+        {
+            const int domlen = geom[lev].Domain().length(2) + 1; // face centers
+            h_rhov_src[lev].resize(domlen, 0.0_rt);
+            d_rhov_src[lev].resize(domlen, 0.0_rt);
+            prob->update_rhov_sources(t_new[0],
+                                      h_rhov_src[lev], d_rhov_src[lev],
+                                      geom[lev], z_phys_cc[lev]);
+        }
+    }
+
     if (solverChoice.custom_rhow_forcing)
     {
         h_rhow_src.resize(max_level+1, amrex::Vector<Real>(0));

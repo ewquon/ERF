@@ -106,7 +106,7 @@
                              z_phys_nd_src[level], detJ_cc_src[level], p0_new,
                              mapfac_m[level], mapfac_u[level], mapfac_v[level],
                              fr_as_crse, fr_as_fine,
-                             dptr_rhow_src, dptr_rhotheta_src,
+                             dptr_rhou_src, dptr_rhov_src, dptr_rhow_src, dptr_rhotheta_src,
                              d_rayleigh_ptrs_at_lev);
 
             // We define and evolve (rho theta)_0 in order to re-create p_0 in a way that is consistent
@@ -200,7 +200,7 @@
                              z_phys_nd[level], detJ_cc[level], p0,
                              mapfac_m[level], mapfac_u[level], mapfac_v[level],
                              fr_as_crse, fr_as_fine,
-                             dptr_rhow_src, dptr_rhotheta_src,
+                             dptr_rhou_src, dptr_rhov_src, dptr_rhow_src, dptr_rhotheta_src,
                              d_rayleigh_ptrs_at_lev);
         }
 

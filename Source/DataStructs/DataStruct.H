@@ -210,6 +210,8 @@ struct SolverChoice {
         }
 
         pp.query("custom_forcing_uses_primitive_vars", custom_forcing_prim_vars);
+        pp.query("add_custom_rhou_forcing", custom_rhou_forcing);
+        pp.query("add_custom_rhov_forcing", custom_rhov_forcing);
         pp.query("add_custom_rhow_forcing", custom_rhow_forcing);
         pp.query("add_custom_rhotheta_forcing", custom_rhotheta_forcing);
 
@@ -393,6 +395,8 @@ struct SolverChoice {
 
     // User-specified forcings in problem definition
     bool custom_forcing_prim_vars = false;
+    bool custom_rhou_forcing = false;
+    bool custom_rhov_forcing = false;
     bool custom_rhow_forcing = false;
     bool custom_rhotheta_forcing = false;
 

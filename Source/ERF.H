@@ -785,6 +785,10 @@ private:
     static int ng_pres_hse;
 
     // Custom source terms
+    amrex::Vector<           amrex::Vector<amrex::Real> > h_rhou_src;
+    amrex::Vector<amrex::Gpu::DeviceVector<amrex::Real> > d_rhou_src;
+    amrex::Vector<           amrex::Vector<amrex::Real> > h_rhov_src;
+    amrex::Vector<amrex::Gpu::DeviceVector<amrex::Real> > d_rhov_src;
     amrex::Vector<           amrex::Vector<amrex::Real> > h_rhow_src;
     amrex::Vector<amrex::Gpu::DeviceVector<amrex::Real> > d_rhow_src;
     amrex::Vector<           amrex::Vector<amrex::Real> > h_rhotheta_src;

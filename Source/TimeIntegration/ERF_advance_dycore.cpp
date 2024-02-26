@@ -73,6 +73,8 @@ void ERF::advance_dycore(int level,
     MultiFab* pi0 = &pi_hse;
 
     // These are optional custom source terms
+    Real* dptr_rhou_src     = solverChoice.custom_rhou_forcing     ? d_rhou_src[level].data()     : nullptr;
+    Real* dptr_rhov_src     = solverChoice.custom_rhov_forcing     ? d_rhov_src[level].data()     : nullptr;
     Real* dptr_rhow_src     = solverChoice.custom_rhow_forcing     ? d_rhow_src[level].data()     : nullptr;
     Real* dptr_rhotheta_src = solverChoice.custom_rhotheta_forcing ? d_rhotheta_src[level].data() : nullptr;
 
@@ -233,6 +235,18 @@ void ERF::advance_dycore(int level,
     // ***********************************************************************************************
     // Update user-defined source terms
     // ***********************************************************************************************
+    if (solverChoice.custom_rhou_forcing) {
+        prob->update_rhou_sources(old_time,
+                                  h_rhou_src[level], d_rhou_src[level],
+                                  fine_geom, z_phys_cc[level]);
+    }
+
+    if (solverChoice.custom_rhov_forcing) {
+        prob->update_rhov_sources(old_time,
+                                  h_rhov_src[level], d_rhov_src[level],
+                                  fine_geom, z_phys_cc[level]);
+    }
+
     if (solverChoice.custom_rhow_forcing) {
         prob->update_rhow_sources(old_time,
                                   h_rhow_src[level], d_rhow_src[level],

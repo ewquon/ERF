@@ -61,6 +61,7 @@ using namespace amrex;
  * @param[in] mapfac_m map factor at cell centers
  * @param[in] mapfac_u map factor at x-faces
  * @param[in] mapfac_v map factor at y-faces
+ * @param[in] dptr_rhow_src  custom z-momentum source term
  * @param[in] dptr_rhotheta_src  custom temperature source term
  * @param[in] d_rayleigh_ptrs_at_lev  Vector of {strength of Rayleigh damping, reference value for xvel/yvel/zvel/theta} used to define Rayleigh damping
  */
@@ -96,6 +97,7 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
                        std::unique_ptr<MultiFab>& mapfac_m,
                        std::unique_ptr<MultiFab>& mapfac_u,
                        std::unique_ptr<MultiFab>& mapfac_v,
+                       const amrex::Real* dptr_rhow_src,
                        const amrex::Real* dptr_rhotheta_src,
                        const Vector<amrex::Real*> d_rayleigh_dptrs)
 {
@@ -840,6 +842,22 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
                 rho_w_rhs(i,j,k) += 0.5 / dt * (rho_w(i,j,k) - rho_w_old(i,j,k));
               }
         });
+
+        // Add custom source terms
+        if (solverChoice.custom_rhow_forcing) {
+            if (solverChoice.custom_forcing_prim_vars) {
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    Real rho_on_w_face = 0.5 * ( cell_data(i,j,k,Rho_comp) + cell_data(i,j,k-1,Rho_comp) );
+                    rho_w_rhs(i, j, k) += rho_on_w_face * dptr_rhow_src[k];
+                });
+            } else {
+                ParallelFor(bx, [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
+                {
+                    rho_w_rhs(i, j, k) += dptr_rhow_src[k];
+                });
+            }
+        }
         } // end profile
     } // mfi
 }

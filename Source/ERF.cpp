@@ -664,7 +664,7 @@ ERF::InitData ()
         d_rhou_src.resize(max_level+1, amrex::Gpu::DeviceVector<Real>(0));
         for (int lev = 0; lev <= finest_level; lev++)
         {
-            const int domlen = geom[lev].Domain().length(2) + 1; // face centers
+            const int domlen = geom[lev].Domain().length(2); // cell centers
             h_rhou_src[lev].resize(domlen, 0.0_rt);
             d_rhou_src[lev].resize(domlen, 0.0_rt);
             prob->update_rhou_sources(t_new[0],
@@ -679,7 +679,7 @@ ERF::InitData ()
         d_rhov_src.resize(max_level+1, amrex::Gpu::DeviceVector<Real>(0));
         for (int lev = 0; lev <= finest_level; lev++)
         {
-            const int domlen = geom[lev].Domain().length(2) + 1; // face centers
+            const int domlen = geom[lev].Domain().length(2); // cell centers
             h_rhov_src[lev].resize(domlen, 0.0_rt);
             d_rhov_src[lev].resize(domlen, 0.0_rt);
             prob->update_rhov_sources(t_new[0],

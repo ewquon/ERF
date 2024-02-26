@@ -1,4 +1,4 @@
-set(erf_exe_name erf_abl_with_zmom_source)
+set(erf_exe_name erf_abl_with_xmom_source)
 
 add_executable(${erf_exe_name} "")
 target_sources(${erf_exe_name}

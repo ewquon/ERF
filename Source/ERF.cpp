@@ -664,7 +664,7 @@ ERF::InitData ()
         d_rhow_src.resize(max_level+1, amrex::Gpu::DeviceVector<Real>(0));
         for (int lev = 0; lev <= finest_level; lev++)
         {
-            const int domlen = geom[lev].Domain().length(2);
+            const int domlen = geom[lev].Domain().length(2) + 1; // face centers
             h_rhow_src[lev].resize(domlen, 0.0_rt);
             d_rhow_src[lev].resize(domlen, 0.0_rt);
             prob->update_rhow_sources(t_new[0],

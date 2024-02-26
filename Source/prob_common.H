@@ -124,12 +124,12 @@ public:
 
         if (z_phys_cc) {
             // use_terrain=1
-            amrex::Error("Temperature forcing not defined for "+name()+" problem with terrain");
+            amrex::Error("Custom z-momentum forcing not defined for "+name()+" problem with terrain");
         } else {
             const int khi              = geom.Domain().bigEnd()[2];
             // const amrex::Real* prob_lo = geom.ProbLo();
             // const auto dx              = geom.CellSize();
-            for (int k = 0; k <= khi; k++)
+            for (int k = 0; k <= khi+1; k++)
             {
                 // const amrex::Real z_cc = prob_lo[2] + (k+0.5)* dx[2];
                 // set RHS term of RhoTheta equation based on time, z_cc here
@@ -161,7 +161,7 @@ public:
 
         if (z_phys_cc) {
             // use_terrain=1
-            amrex::Error("Temperature forcing not defined for "+name()+" problem with terrain");
+            amrex::Error("Custom temperature forcing not defined for "+name()+" problem with terrain");
         } else {
             const int khi              = geom.Domain().bigEnd()[2];
             // const amrex::Real* prob_lo = geom.ProbLo();

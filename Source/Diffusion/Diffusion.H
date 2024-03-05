@@ -63,7 +63,7 @@ void DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
                              const amrex::Array4<const amrex::Real>& tm_arr,
                              const amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> grav_gpu,
                              const amrex::BCRec* bc_ptr,
-                             const bool use_most);
+                             const bool store_most_stress);
 
 void DiffusionSrcForState_T (const amrex::Box& bx, const amrex::Box& domain,
                              int start_comp, int num_comp,
@@ -90,7 +90,7 @@ void DiffusionSrcForState_T (const amrex::Box& bx, const amrex::Box& domain,
                              const amrex::Array4<const amrex::Real>& tm_arr,
                              const amrex::GpuArray<amrex::Real,AMREX_SPACEDIM> grav_gpu,
                              const amrex::BCRec* bc_ptr,
-                             const bool use_most);
+                             const bool store_most_stress);
 
 
 

@@ -121,48 +121,37 @@ ABLMost::compute_fluxes (const int& lev,
 void
 ABLMost::impose_most_bcs (const int& lev,
                           const Vector<MultiFab*>& mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
                           MultiFab* xzmom_flux, MultiFab* zxmom_flux,
                           MultiFab* yzmom_flux, MultiFab* zymom_flux,
-                          MultiFab* heat_flux,
-#else
+                          MultiFab* heat_flux,  MultiFab* qv_flux,
                           MultiFab* eddyDiffs,
-#endif
                           MultiFab* z_phys)
 {
-    const int zlo = 0;
+    Box domain    = m_geom[lev].Domain();
+    const int klo = domain.smallEnd(2);
     if (flux_type == FluxCalcType::MOENG) {
-        moeng_flux flux_comp(zlo);
+        moeng_flux flux_comp(klo);
         compute_most_bcs(lev, mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                         xzmom_flux, xzmom_flux,
-                         yzmom_flux, yzmom_flux,
-                         heat_flux,
-#else
+                         xzmom_flux, zxmom_flux,
+                         yzmom_flux, zymom_flux,
+                         heat_flux, qv_flux,
                          eddyDiffs,
-#endif
                          z_phys, m_geom[lev].CellSize(2), flux_comp);
     } else if (flux_type == FluxCalcType::DONELAN) {
-        donelan_flux flux_comp(zlo);
+        donelan_flux flux_comp(klo);
         compute_most_bcs(lev, mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                         xzmom_flux, xzmom_flux,
-                         yzmom_flux, yzmom_flux,
-                         heat_flux,
-#else
+                         xzmom_flux, zxmom_flux,
+                         yzmom_flux, zymom_flux,
+                         heat_flux, qv_flux,
                          eddyDiffs,
-#endif
                          z_phys, m_geom[lev].CellSize(2), flux_comp);
     } else {
-        custom_flux flux_comp(zlo);
+        custom_flux flux_comp(klo);
         compute_most_bcs(lev, mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                         xzmom_flux, xzmom_flux,
-                         yzmom_flux, yzmom_flux,
-                         heat_flux,
-#else
+                         xzmom_flux, zxmom_flux,
+                         yzmom_flux, zymom_flux,
+                         heat_flux, qv_flux,
                          eddyDiffs,
-#endif
                          z_phys, m_geom[lev].CellSize(2), flux_comp);
     }
 }
@@ -180,25 +169,24 @@ template<typename FluxCalc>
 void
 ABLMost::compute_most_bcs (const int& lev,
                            const Vector<MultiFab*>& mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
                            MultiFab* xzmom_flux, MultiFab* zxmom_flux,
                            MultiFab* yzmom_flux, MultiFab* zymom_flux,
-                           MultiFab* heat_flux,
-#else
+                           MultiFab* heat_flux , MultiFab* qv_flux,
                            MultiFab* eddyDiffs,
-#endif
                            MultiFab* z_phys,
                            const Real& dz_no_terrain,
                            const FluxCalc& flux_comp)
 {
-    const int zlo   = 0;
-    const int icomp = 0;
+    Box domain    = m_geom[lev].Domain();
+    const int klo = domain.smallEnd(2);
+    const bool store_fluxes = m_store_fluxes;
+    const Real eta_eps = 1e-8;
+
     for (MFIter mfi(*mfs[0]); mfi.isValid(); ++mfi)
     {
         // TODO: No LSM lateral ghost cells, should this change?
         // Valid CC box
-        Box vbx = mfi.validbox(); vbx.makeSlab(2,zlo-1);
-
+        Box vbx = mfi.validbox(); vbx.makeSlab(2,klo);
         Box vbxx = surroundingNodes(vbx,0);
         Box vbxy = surroundingNodes(vbx,1);
 
@@ -206,15 +194,17 @@ ABLMost::compute_most_bcs (const int& lev,
         const auto cons_arr  = mfs[Vars::cons]->array(mfi);
         const auto velx_arr  = mfs[Vars::xvel]->array(mfi);
         const auto vely_arr  = mfs[Vars::yvel]->array(mfi);
-#ifdef ERF_EXPLICIT_MOST_STRESS
+
+        // Store diffusive fluxes
         auto t13_arr = xzmom_flux->array(mfi);
         auto t23_arr = yzmom_flux->array(mfi);
         auto t31_arr = (zxmom_flux) ? zxmom_flux->array(mfi) : Array4<Real>{};
         auto t32_arr = (zymom_flux) ? zymom_flux->array(mfi) : Array4<Real>{};
-        auto hfx_arr =  heat_flux->array(mfi);
-#else
+        auto hfx_arr = heat_flux->array(mfi);
+        auto qfx_arr = (qv_flux) ? qv_flux->array(mfi) : Array4<Real>{};
+
+        // Fill ghost cells
         const auto  eta_arr  = eddyDiffs->array(mfi);
-#endif
         const auto zphys_arr = (z_phys) ? z_phys->const_array(mfi) : Array4<const Real>{};
 
         // Get average arrays
@@ -247,124 +237,181 @@ ABLMost::compute_most_bcs (const int& lev,
             auto dest_arr = (*mfs[var_idx])[mfi].array();
 
             if (var_idx == Vars::cons) {
-                Box b2d = bx;
-                b2d.setBig(2,zlo-1);
-                int n = RhoTheta_comp;
+                Box b2d = bx; int k_end = b2d.smallEnd(2); b2d.makeSlab(2,klo);
+                int n   = RhoTheta_comp;
                 ParallelFor(b2d, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
-                    Real dz = (zphys_arr) ? ( zphys_arr(i,j,zlo) - zphys_arr(i,j,zlo-1) ) : dz_no_terrain;
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                    Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,zlo+1) - zphys_arr(i,j,zlo) ) : dz_no_terrain;
-#endif
+                    Real dz  = (zphys_arr) ? ( zphys_arr(i,j,klo  ) - zphys_arr(i,j,klo-1) ) : dz_no_terrain;
+                    Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,klo+1) - zphys_arr(i,j,klo  ) ) : dz_no_terrain;
 
                     // This is the _kinematic_ heat flux [K m/s]
-                    Real Tflux = flux_comp.compute_t_flux(i, j, k, n, icomp, dz,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                                                          dz1,
-#endif
+                    Real Tflux = flux_comp.compute_t_flux(i, j, k, n,
                                                           cons_arr, velx_arr, vely_arr,
-#ifndef ERF_EXPLICIT_MOST_STRESS
-                                                          eta_arr,
-#endif
-                                                          umm_arr, tm_arr, u_star_arr, t_star_arr, t_surf_arr,
-                                                          dest_arr);
+                                                          umm_arr, tm_arr,
+                                                          u_star_arr, t_star_arr,
+                                                          t_surf_arr);
 
-
-                    // TODO: make sure not to double-count surface heat flux if using a LSM
-                    int is_land = (lmask_arr) ? lmask_arr(i,j,zlo) : 1;
+                    // Pass heat flux to LSM model if needed
+                    int is_land = (lmask_arr) ? lmask_arr(i,j,klo) : 1;
                     if (is_land && lsm_flux_arr && vbx.contains(i,j,k)) {
-                        lsm_flux_arr(i,j,zlo) = Tflux;
+                        lsm_flux_arr(i,j,klo) = Tflux;
                     }
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                    else if ((k == zlo-1) && vbx.contains(i,j,k)) {
-                        hfx_arr(i,j,zlo) = Tflux;
+
+                    // Store flux or populate ghost cells
+                    if (store_fluxes) {
+                        if (vbx.contains(i,j,k)) hfx_arr(i,j,klo) = Tflux;
+                        Real RT     =  cons_arr(i,j,klo  ,n);
+                        Real RTgrad = (cons_arr(i,j,klo+1,n) - RT) / (0.5*(dz+dz1)); // surface gradient equal to gradient at first zface
+                        for (int lk(klo-1); lk>=k_end; --lk) {
+                            Real deltaz  = dz * (klo - lk);
+                            dest_arr(i,j,k,n) = RT - RTgrad * deltaz;
+                        }
+                    } else {
+                        Real rho   = cons_arr(i,j,klo,Rho_comp);
+                        Real theta = cons_arr(i,j,klo,n) / rho;
+
+                        int ie, je;
+                        ie = i  < lbound(eta_arr).x ? lbound(eta_arr).x : i;
+                        je = j  < lbound(eta_arr).y ? lbound(eta_arr).y : j;
+                        ie = ie > ubound(eta_arr).x ? ubound(eta_arr).x : ie;
+                        je = je > ubound(eta_arr).y ? ubound(eta_arr).y : je;
+                        Real eta = eta_arr(ie,je,klo,EddyDiff::Theta_v);
+                        eta   = amrex::max(eta,eta_eps);
+
+                        for (int lk(klo-1); lk>=k_end; --lk) {
+                            Real deltaz  = dz * (klo - lk);
+                            dest_arr(i,j,k,n) = rho*(theta + Tflux*rho/eta*deltaz);
+                        }
                     }
-#endif
+
                 });
 
-                // TODO: Generalize MOST q flux with MOENG & DONELAN flux types
+
                 if ((flux_type == FluxCalcType::CUSTOM) && use_moisture) {
                     n = RhoQ1_comp;
                     ParallelFor(b2d, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                     {
-                        Real dz = (zphys_arr) ? ( zphys_arr(i,j,zlo) - zphys_arr(i,j,zlo-1) ) : dz_no_terrain;
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                        Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,zlo+1) - zphys_arr(i,j,zlo) ) : dz_no_terrain;
-#endif
+                        Real dz  = (zphys_arr) ? ( zphys_arr(i,j,klo  ) - zphys_arr(i,j,klo-1) ) : dz_no_terrain;
+                        Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,klo+1) - zphys_arr(i,j,klo  ) ) : dz_no_terrain;
 
-                        Real Qflux = flux_comp.compute_q_flux(i, j, k, n, icomp, dz,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                                                              dz1,
-#endif
+                        Real Qflux = flux_comp.compute_q_flux(i, j, k, n,
                                                               cons_arr, velx_arr, vely_arr,
-#ifndef ERF_EXPLICIT_MOST_STRESS
-                                                              eta_arr,
-#endif
-                                                              umm_arr, tm_arr, u_star_arr, q_star_arr, t_surf_arr,
-                                                              dest_arr);
+                                                              umm_arr, tm_arr,
+                                                              u_star_arr, q_star_arr,
+                                                              t_surf_arr);
+
+                        // TODO: Generalize MOST q flux with MOENG & DONELAN flux types
+
+                        // Store flux or populate ghost cells
+                        if (store_fluxes) {
+                            if (vbx.contains(i,j,k)) qfx_arr(i,j,klo) = Qflux;
+                            Real RQ     =  cons_arr(i,j,klo  ,n);
+                            Real RQgrad = (cons_arr(i,j,klo+1,n) - RQ) / (0.5*(dz+dz1)); // surface gradient equal to gradient at first zface
+                            for (int lk(klo-1); lk>=k_end; --lk) {
+                                Real deltaz  = dz * (klo - lk);
+                                dest_arr(i,j,k,n) = RQ - RQgrad * deltaz;
+                            }
+                        } else {
+                            Real rho = cons_arr(i,j,klo,Rho_comp);
+                            Real qv  = cons_arr(i,j,klo,n) / rho;
+
+                            int ie, je;
+                            ie = std::max(lbound(eta_arr).x,i );
+                            ie = std::min(ubound(eta_arr).x,ie);
+                            je = std::max(lbound(eta_arr).y,j );
+                            je = std::min(ubound(eta_arr).y,je);
+
+                            Real eta = eta_arr(ie,je,klo,EddyDiff::Q_v);
+                            eta = amrex::max(eta,eta_eps);
+
+                            for (int lk(klo-1); lk>=k_end; --lk) {
+                                Real deltaz  = dz * (klo - lk);
+                                dest_arr(i,j,k,n) = rho*(qv + Qflux*rho/eta*deltaz);
+                            }
+                        }
                     });
                 }
 
             } else if (var_idx == Vars::xvel) {
-
-                Box xb2d = surroundingNodes(bx,0);
-                xb2d.setBig(2,zlo-1);
-
+                Box xb2d = surroundingNodes(bx,0); int k_end = xb2d.smallEnd(2); xb2d.makeSlab(2,klo);
                 ParallelFor(xb2d, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
-                    Real dz = (zphys_arr) ? ( zphys_arr(i,j,zlo) - zphys_arr(i,j,zlo-1) ) : dz_no_terrain;
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                    Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,zlo+1) - zphys_arr(i,j,zlo) ) : dz_no_terrain;
-#endif
-
-                    Real stressx = flux_comp.compute_u_flux(i, j, k, icomp, dz,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                                                            dz1,
-#endif
+                    Real dz  = (zphys_arr) ? ( zphys_arr(i,j,klo  ) - zphys_arr(i,j,klo-1) ) : dz_no_terrain;
+                    Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,klo+1) - zphys_arr(i,j,klo  ) ) : dz_no_terrain;
+                    Real stressx = flux_comp.compute_u_flux(i, j, k,
                                                             cons_arr, velx_arr, vely_arr,
-#ifndef ERF_EXPLICIT_MOST_STRESS
-                                                            eta_arr,
-#endif
-                                                            umm_arr, um_arr, u_star_arr,
-                                                            dest_arr);
+                                                            umm_arr, um_arr, u_star_arr);
 
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                    if ((k == zlo-1) && vbxx.contains(i,j,k)) {
-                        t13_arr(i,j,zlo) = -stressx;
-                        if (t31_arr) t31_arr(i,j,zlo) = -stressx;
+                    // Store flux or populate ghost cells
+                    if (store_fluxes) {
+                        if (vbxx.contains(i,j,k)) {
+                            t13_arr(i,j,klo) = -stressx;
+                            if (t31_arr) t31_arr(i,j,klo) = -stressx;
+                        }
+                        Real rho   = 0.5 * ( cons_arr(i  ,j,klo,Rho_comp)
+                                           + cons_arr(i-1,j,klo,Rho_comp) );
+                        Real ugrad = (velx_arr(i,j,klo+1) - velx_arr(i,j,klo)) / (0.5*(dz+dz1)); // surface gradient equal to gradient at first zface
+                        for (int lk(klo-1); lk>=k_end; --lk) {
+                            Real deltaz  = dz * (klo - lk);
+                            dest_arr(i,j,k) = rho*(velx_arr(i,j,klo) - ugrad * deltaz);
+                        }
+                    } else {
+                        int ie, je;
+                        ie = std::max(lbound(eta_arr).x+1,i );
+                        ie = std::min(ubound(eta_arr).x  ,ie);
+                        je = std::max(lbound(eta_arr).y  ,j );
+                        je = std::min(ubound(eta_arr).y  ,je);
+
+                        Real eta   = 0.5 *(  eta_arr(ie  ,je,klo,EddyDiff::Mom_v)
+                                           + eta_arr(ie-1,je,klo,EddyDiff::Mom_v) );
+                        eta   = amrex::max(eta,eta_eps);
+
+                        for (int lk(klo-1); lk>=k_end; --lk) {
+                            Real deltaz  = dz * (klo - lk);
+                            dest_arr(i,j,k) = dest_arr(i,j,klo) - stressx/eta*deltaz;
+                        }
                     }
-#endif
                 });
 
             } else if (var_idx == Vars::yvel) {
-
-                Box yb2d = surroundingNodes(bx,1);
-                yb2d.setBig(2,zlo-1);
-
+                Box yb2d = surroundingNodes(bx,1); int k_end = yb2d.smallEnd(2); yb2d.makeSlab(2,klo);
                 ParallelFor(yb2d, [=] AMREX_GPU_DEVICE (int i, int j, int k)
                 {
-                    Real dz = (zphys_arr) ? ( zphys_arr(i,j,zlo) - zphys_arr(i,j,zlo-1) ) : dz_no_terrain;
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                    Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,zlo+1) - zphys_arr(i,j,zlo) ) : dz_no_terrain;
-#endif
-
-                    Real stressy = flux_comp.compute_v_flux(i, j, k, icomp, dz,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                                                            dz1,
-#endif
+                    Real dz  = (zphys_arr) ? ( zphys_arr(i,j,klo  ) - zphys_arr(i,j,klo-1) ) : dz_no_terrain;
+                    Real dz1 = (zphys_arr) ? ( zphys_arr(i,j,klo+1) - zphys_arr(i,j,klo  ) ) : dz_no_terrain;
+                    Real stressy = flux_comp.compute_v_flux(i, j, k,
                                                             cons_arr, velx_arr, vely_arr,
-#ifndef ERF_EXPLICIT_MOST_STRESS
-                                                            eta_arr,
-#endif
-                                                            umm_arr, vm_arr, u_star_arr,
-                                                            dest_arr);
+                                                            umm_arr, vm_arr, u_star_arr);
 
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                    if ((k == zlo-1) && vbxy.contains(i,j,k)) {
-                        t23_arr(i,j,zlo) = -stressy;
-                        if (t32_arr) t32_arr(i,j,zlo) = -stressy;
+                    // Store flux or populate ghost cells
+                    if (store_fluxes) {
+                        if (vbxy.contains(i,j,k)) {
+                            t23_arr(i,j,klo) = -stressy;
+                            if (t32_arr) t32_arr(i,j,klo) = -stressy;
+                        }
+                        Real rho   = 0.5 * ( cons_arr(i,j  ,klo,Rho_comp)
+                                           + cons_arr(i,j-1,klo,Rho_comp) );
+                        Real vgrad = (vely_arr(i,j,klo+1) - vely_arr(i,j,klo)) / (0.5*(dz+dz1)); // surface gradient equal to gradient at first zface
+                        for (int lk(klo-1); lk>=k_end; --lk) {
+                            Real deltaz  = dz * (klo - lk);
+                            dest_arr(i,j,k) = rho*(vely_arr(i,j,klo) - vgrad * deltaz);
+                        }
+                    } else {
+                        int ie, je;
+                        ie = std::max(lbound(eta_arr).x  ,i );
+                        ie = std::min(ubound(eta_arr).x  ,ie);
+                        je = std::max(lbound(eta_arr).y+1,j );
+                        je = std::min(ubound(eta_arr).y  ,je);
+
+                        Real eta   = 0.5 *(  eta_arr(ie,je  ,klo,EddyDiff::Mom_v)
+                                           + eta_arr(ie,je-1,klo,EddyDiff::Mom_v) );
+                        eta   = amrex::max(eta,eta_eps);
+
+                        for (int lk(klo-1); lk>=k_end; --lk) {
+                            Real deltaz  = dz * (klo - lk);
+                            dest_arr(i,j,k) = dest_arr(i,j,klo) - stressy/eta*deltaz;
+                        }
                     }
-#endif
                 });
             }
         } // var_idx

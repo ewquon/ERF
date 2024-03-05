@@ -205,6 +205,7 @@ ERF::ERF ()
     Tau23_lev.resize(nlevs_max); Tau32_lev.resize(nlevs_max);
     SFS_hfx1_lev.resize(nlevs_max); SFS_hfx2_lev.resize(nlevs_max); SFS_hfx3_lev.resize(nlevs_max);
     SFS_diss_lev.resize(nlevs_max);
+    SFS_qfx3_lev.resize(nlevs_max);
     eddyDiffs_lev.resize(nlevs_max);
     SmnSmn_lev.resize(nlevs_max);
 
@@ -755,10 +756,6 @@ ERF::InitData ()
     //       FillPatch does not call MOST, FillIntermediatePatch does.
     if (phys_bc_type[Orientation(Direction::z,Orientation::low)] == ERF_BC::MOST)
     {
-#ifdef ERF_EXPLICIT_MOST_STRESS
-        amrex::Print() << "Using MOST with explicitly included surface stresses" << std::endl;
-#endif
-
         m_most = std::make_unique<ABLMost>(geom, vars_old, Theta_prim, Qv_prim, z_phys_nd,
                                            sst_lev, lmask_lev, lsm_data, lsm_flux
 #ifdef ERF_USE_NETCDF
@@ -1674,6 +1671,7 @@ ERF::ERF (const amrex::RealBox& rb, int max_level_in,
     Tau23_lev.resize(nlevs_max); Tau32_lev.resize(nlevs_max);
     SFS_hfx1_lev.resize(nlevs_max); SFS_hfx2_lev.resize(nlevs_max); SFS_hfx3_lev.resize(nlevs_max);
     SFS_diss_lev.resize(nlevs_max);
+    SFS_qfx3_lev.resize(nlevs_max);
     eddyDiffs_lev.resize(nlevs_max);
     SmnSmn_lev.resize(nlevs_max);
 

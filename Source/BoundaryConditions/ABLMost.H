@@ -45,11 +45,15 @@ public:
       m_geom(geom),
       m_ma(geom,vars_old,Theta_prim,Qv_prim,z_phys_nd)
     {
+        amrex::ParmParse pp("erf");
+
         // We have a moisture model if Qv_prim is a valid pointer
         use_moisture = (Qv_prim[0].get());
 
+        // Should we store the fluxes?
+        pp.query("most.store_fluxes", m_store_fluxes);
+
         // Get roughness
-        amrex::ParmParse pp("erf");
         pp.query("most.z0", z0_const);
 
         // Specify how to compute the flux
@@ -220,26 +224,20 @@ public:
     void
     impose_most_bcs (const int& lev,
                      const amrex::Vector<amrex::MultiFab*>& mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
                      amrex::MultiFab* xzmom_flux, amrex::MultiFab* zxmom_flux,
                      amrex::MultiFab* yzmom_flux, amrex::MultiFab* zymom_flux,
-                     amrex::MultiFab* heat_flux,
-#else
+                     amrex::MultiFab* heat_flux,  amrex::MultiFab* qv_flux,
                      amrex::MultiFab* eddyDiffs,
-#endif
                      amrex::MultiFab* z_phys);
 
     template<typename FluxCalc>
     void
     compute_most_bcs (const int& lev,
                       const amrex::Vector<amrex::MultiFab*>& mfs,
-#ifdef ERF_EXPLICIT_MOST_STRESS
-                     amrex::MultiFab* xzmom_flux, amrex::MultiFab* zxmom_flux,
-                     amrex::MultiFab* yzmom_flux, amrex::MultiFab* zymom_flux,
-                      amrex::MultiFab* heat_flux,
-#else
+                      amrex::MultiFab* xzmom_flux, amrex::MultiFab* zxmom_flux,
+                      amrex::MultiFab* yzmom_flux, amrex::MultiFab* zymom_flux,
+                      amrex::MultiFab* heat_flux,  amrex::MultiFab* qv_flux,
                       amrex::MultiFab* eddyDiffs,
-#endif
                       amrex::MultiFab* z_phys,
                       const amrex::Real& dz_no_terrain,
                       const FluxCalc& flux_comp);
@@ -286,6 +284,9 @@ public:
     const amrex::MultiFab*
     get_mac_avg (const int& lev, int comp) { return m_ma.get_average(lev,comp); }
 
+    bool
+    store_fluxes() { return m_store_fluxes; }
+
     enum struct FluxCalcType {
         MOENG = 0,      ///< Moeng functional form
         DONELAN,        ///< Donelan functional form
@@ -310,6 +311,7 @@ public:
 
 private:
     bool use_moisture;
+    bool m_store_fluxes{false};
     amrex::Real z0_const;
     amrex::Real surf_temp;
     amrex::Real surf_heating_rate{0};

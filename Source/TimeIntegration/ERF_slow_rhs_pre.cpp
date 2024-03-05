@@ -139,6 +139,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
 
     const bool use_moisture = (solverChoice.moisture_type != MoistureType::None);
     const bool use_most     = (most != nullptr);
+    const bool store_most_stress = most->store_fluxes();
 
     const amrex::BCRec* bc_ptr   = domain_bcs_type_d.data();
     const amrex::BCRec* bc_ptr_h = domain_bcs_type.data();
@@ -237,13 +238,11 @@ void erf_slow_rhs_pre (int level, int finest_level,
             Box tbxxz = mfi.tilebox(IntVect(1,0,1));
             Box tbxyz = mfi.tilebox(IntVect(0,1,1));
 
-#ifdef ERF_EXPLICIT_MOST_STRESS
-            if (use_most) {
+            if (store_most_stress) {
                 // Don't overwrite modeled total stress value at boundary
-                tbxxz.setSmall(2,1);
-                tbxyz.setSmall(2,1);
+                if (tbxxz.smallEnd(2) == domain.smallEnd(2)) tbxxz.growLo(2,1);
+                if (tbxyz.smallEnd(2) == domain.smallEnd(2)) tbxyz.growLo(2,1);
             }
-#endif
 
             // We need a halo cell for terrain
              bxcc.grow(IntVect(1,1,0));

@@ -58,7 +58,7 @@ DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
                         const Array4<const Real>& tm_arr,
                         const amrex::GpuArray<Real,AMREX_SPACEDIM> grav_gpu,
                         const amrex::BCRec* bc_ptr,
-                        const bool use_most)
+                        const bool store_most_stress)
 {
     BL_PROFILE_VAR("DiffusionSrcForState_N()",DiffusionSrcForState_N);
 
@@ -220,12 +220,7 @@ DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
 
             bool ext_dir_on_zlo = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::ext_dir) && k == 0);
             bool ext_dir_on_zhi = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(5) == ERFBCType::ext_dir) && k == dom_hi.z+1);
-#ifdef ERF_EXPLICIT_MOST_STRESS
-            bool most_on_zlo    = ( use_most &&
-                                    (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::foextrap) && k == 0);
-#else
-            bool most_on_zlo    = false;
-#endif
+            bool most_on_zlo    = ( store_most_stress && k == 0);
             if (ext_dir_on_zlo) {
                 zflux(i,j,k,qty_index) = rhoAlpha * ( -(8./3.) * cell_prim(i, j, k-1, prim_index)
                                                           + 3. * cell_prim(i, j, k  , prim_index)
@@ -275,12 +270,7 @@ DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
 
             bool ext_dir_on_zlo = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::ext_dir) && k == 0);
             bool ext_dir_on_zhi = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(5) == ERFBCType::ext_dir) && k == dom_hi.z+1);
-#ifdef ERF_EXPLICIT_MOST_STRESS
-            bool most_on_zlo    = ( use_most &&
-                                    (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::foextrap) && k == 0);
-#else
-            bool most_on_zlo    = false;
-#endif
+            bool most_on_zlo    = ( store_most_stress && k == 0);
             if (ext_dir_on_zlo) {
                 zflux(i,j,k,qty_index) = rhoAlpha * ( -(8./3.) * cell_prim(i, j, k-1, prim_index)
                                                           + 3. * cell_prim(i, j, k  , prim_index)
@@ -328,12 +318,7 @@ DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
 
             bool ext_dir_on_zlo = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::ext_dir) && k == 0);
             bool ext_dir_on_zhi = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(5) == ERFBCType::ext_dir) && k == dom_hi.z+1);
-#ifdef ERF_EXPLICIT_MOST_STRESS
-            bool most_on_zlo    = ( use_most &&
-                                    (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::foextrap) && k == 0);
-#else
-            bool most_on_zlo    = false;
-#endif
+            bool most_on_zlo    = ( store_most_stress && k == 0);
             if (ext_dir_on_zlo) {
                 zflux(i,j,k,qty_index) = rhoAlpha * ( -(8./3.) * cell_prim(i, j, k-1, prim_index)
                                                           + 3. * cell_prim(i, j, k  , prim_index)
@@ -378,12 +363,7 @@ DiffusionSrcForState_N (const amrex::Box& bx, const amrex::Box& domain,
 
             bool ext_dir_on_zlo = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::ext_dir) && k == 0);
             bool ext_dir_on_zhi = ( (bc_ptr[BCVars::cons_bc+qty_index].lo(5) == ERFBCType::ext_dir) && k == dom_hi.z+1);
-#ifdef ERF_EXPLICIT_MOST_STRESS
-            bool most_on_zlo    = ( use_most &&
-                                    (bc_ptr[BCVars::cons_bc+qty_index].lo(2) == ERFBCType::foextrap) && k == 0);
-#else
-            bool most_on_zlo    = false;
-#endif
+            bool most_on_zlo    = ( store_most_stress && k == 0);
             if (ext_dir_on_zlo) {
                 zflux(i,j,k,qty_index) = rhoAlpha * ( -(8./3.) * cell_prim(i, j, k-1, prim_index)
                                                           + 3. * cell_prim(i, j, k  , prim_index)

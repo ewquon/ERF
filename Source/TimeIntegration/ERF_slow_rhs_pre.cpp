@@ -139,7 +139,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
 
     const bool use_moisture = (solverChoice.moisture_type != MoistureType::None);
     const bool use_most     = (most != nullptr);
-    const bool store_most_stress = most->store_fluxes();
+    const bool store_most_stress = (most != nullptr) ? most->store_fluxes() : false;
 
     const amrex::BCRec* bc_ptr   = domain_bcs_type_d.data();
     const amrex::BCRec* bc_ptr_h = domain_bcs_type.data();

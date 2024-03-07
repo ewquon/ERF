@@ -123,6 +123,11 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
 
     const bool l_use_terrain = solverChoice.use_terrain;
 
+    const bool l_add_subs_mom    = ac.add_subs_mom;
+    const bool l_add_subs_temp   = ac.add_subs_temp;
+    const bool l_add_subs_scalar = ac.add_subs_scalar;
+    const bool l_add_subs_moist  = ac.add_subs_moist;
+
     AMREX_ALWAYS_ASSERT (!l_use_terrain);
 
     const bool l_add_subs_temp    = ac.add_subs_temp;
@@ -523,7 +528,8 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
         const Array4<const Real>& rho_w_old = S_old[IntVars::zmom].array(mfi);
 
         // Subsidence field
-        const Array4<Real const>& w_subs_arr = (l_add_subs_mom || l_add_subs_temp) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+        bool add_subs = (l_add_subs_mom || l_add_subs_temp || l_add_subs_scalar || l_add_subs_moist);
+        const Array4<Real const>& w_subs_arr = add_subs ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
         // Map factors
         const Array4<const Real>& mf_m   = mapfac_m->const_array(mfi);
@@ -620,7 +626,7 @@ void erf_slow_rhs_inc (int /*level*/, int nrk,
                                l_horiz_adv_type, l_vert_adv_type,
                                l_horiz_upw_frac, l_vert_upw_frac,
                                l_use_terrain,
-                               l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                               l_add_subs_mom, l_add_subs_temp, l_add_subs_scalar, l_add_subs_moist,
                                flx_arr);
 
         if (l_use_diff) {

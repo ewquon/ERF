@@ -124,7 +124,10 @@ AdvectionSrcForRho (const Box& bx,
  * @param[in] horiz_upw_frac upwinding fraction to be used in horiz. directions for dry scalars (for Blended schemes only)
  * @param[in] vert_upw_frac upwinding fraction to be used in vert. directions for dry scalars (for Blended schemes only)
  * @param[in] use_terrain if true, use the terrain-aware derivatives (with metric terms)
- * @param[in] add_subsidence if true, add subsidence source terms
+ * @param[in] add_subs_mom if true, add subsidence source terms to x- and y-momenta
+ * @param[in] add_subs_temp if true, add subsidence source terms to temperature
+ * @param[in] add_subs_scalar if true, add subsidence source terms to scalars
+ * @param[in] add_subs_moist if true, add subsidence source terms to moisture variables
  * @param[in] w_subs_arr subsidence field
  */
 
@@ -143,7 +146,10 @@ AdvectionSrcForScalars (const Box& bx, const int icomp, const int ncomp,
                         const Real horiz_upw_frac,
                         const Real vert_upw_frac,
                         const bool use_terrain,
-                        const bool add_subsidence,
+                        const bool add_subs_mom,
+                        const bool add_subs_temp,
+                        const bool add_subs_scalar,
+                        const bool add_subs_moist,
                         const Array4<const Real>& w_subs_arr,
                         const GpuArray<const Array4<Real>, AMREX_SPACEDIM>& flx_arr)
 {
@@ -253,11 +259,12 @@ AdvectionSrcForScalars (const Box& bx, const int icomp, const int ncomp,
     });
 
     // add tendencies for subsidence
-    if (add_subsidence) {
-        if (icomp == RhoTheta_comp) {
-            amrex::Print() << "Updating subsidence source term for temperature" << std::endl;
-            AMREX_ALWAYS_ASSERT(ncomp==1);
-        } else if (icomp == RhoKE_comp) {
+    if (add_subs_temp && (icomp == RhoTheta_comp)) {
+        amrex::Print() << "Updating subsidence source term for temperature" << std::endl;
+        AMREX_ALWAYS_ASSERT(ncomp==1);
+    }
+    if (add_subs_scalar) {
+        if (icomp == RhoKE_comp) {
             amrex::Print() << "Updating subsidence source term for TKE" << std::endl;
             AMREX_ALWAYS_ASSERT(ncomp==1);
         } else if (icomp == RhoQKE_comp) {
@@ -266,12 +273,18 @@ AdvectionSrcForScalars (const Box& bx, const int icomp, const int ncomp,
         } else if (icomp == RhoScalar_comp) {
             amrex::Print() << "Updating subsidence source term for passive scalar" << std::endl;
             AMREX_ALWAYS_ASSERT(ncomp==1);
-        } else if (icomp >= RhoQ1_comp) {
+        }
+    }
+    if (add_subs_moist) {
+        if (icomp >= RhoQ1_comp) {
             amrex::Print() << "Updating subsidence source term for " << ncomp << " moisture var(s)" << std::endl;
         } else {
             amrex::Print() << "Updating subsidence source term for var" << icomp
                << " (ncomp=" << ncomp << ")" << std::endl;
         }
+    }
+
+    if (add_subs_temp || add_subs_scalar || add_subs_moist) {
         ParallelFor(bx, ncomp, [=] AMREX_GPU_DEVICE (int i, int j, int k, int n) noexcept
         {
             Real invdetJ = (use_terrain) ?  1. / detJ(i,j,k) : 1.;

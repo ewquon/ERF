@@ -101,6 +101,8 @@ void erf_slow_rhs_post (int level, int finest_level,
     const MultiFab* t_mean_mf = nullptr;
     if (most) t_mean_mf = most->get_mac_avg(0,2);
 
+    const bool l_add_subs_mom     = ac.add_subs_mom;
+    const bool l_add_subs_temp    = ac.add_subs_temp;
     const bool l_add_subs_scalar = ac.add_subs_scalar;
     const bool l_add_subs_moist  = ac.add_subs_moist;
 
@@ -219,7 +221,8 @@ void erf_slow_rhs_post (int level, int finest_level,
         const Array4<Real const>& mu_turb = l_use_turb ? eddyDiffs->const_array(mfi) : Array4<const Real>{};
 
         // Subsidence field
-        const Array4<Real const>& w_subs_arr = (l_add_subs_scalar || l_add_subs_moist) ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
+        bool add_subs = (l_add_subs_mom || l_add_subs_temp || l_add_subs_scalar || l_add_subs_moist);
+        const Array4<Real const>& w_subs_arr = add_subs ? w_subs_cc->const_array(mfi) : Array4<const Real>{};
 
         // Metric terms
         const Array4<const Real>& z_nd         = l_use_terrain    ? z_phys_nd->const_array(mfi) : Array4<const Real>{};
@@ -291,7 +294,8 @@ void erf_slow_rhs_post (int level, int finest_level,
                                    horiz_adv_type, vert_adv_type,
                                    horiz_upw_frac, vert_upw_frac,
                                    l_use_terrain,
-                                   l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                                   l_add_subs_mom, l_add_subs_temp, l_add_subs_scalar, l_add_subs_moist,
+                                   w_subs_arr,
                                    flx_arr);
         }
         if (l_use_QKE) {
@@ -302,7 +306,8 @@ void erf_slow_rhs_post (int level, int finest_level,
                                    horiz_adv_type, vert_adv_type,
                                    horiz_upw_frac, vert_upw_frac,
                                    l_use_terrain,
-                                   l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                                   l_add_subs_mom, l_add_subs_temp, l_add_subs_scalar, l_add_subs_moist,
+                                   w_subs_arr,
                                    flx_arr);
         }
 
@@ -314,7 +319,8 @@ void erf_slow_rhs_post (int level, int finest_level,
                                horiz_adv_type, vert_adv_type,
                                horiz_upw_frac, vert_upw_frac,
                                l_use_terrain,
-                               l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                               l_add_subs_mom, l_add_subs_temp, l_add_subs_scalar, l_add_subs_moist,
+                               w_subs_arr,
                                flx_arr);
 
         if (solverChoice.moisture_type != MoistureType::None)
@@ -337,7 +343,8 @@ void erf_slow_rhs_post (int level, int finest_level,
                                    moist_horiz_adv_type, moist_vert_adv_type,
                                    moist_horiz_upw_frac, moist_vert_upw_frac,
                                    l_use_terrain,
-                                   l_add_subs_temp, l_add_subs_scalars, w_subs_arr,
+                                   l_add_subs_mom, l_add_subs_temp, l_add_subs_scalar, l_add_subs_moist,
+                                   w_subs_arr,
                                    flx_arr);
         }
 

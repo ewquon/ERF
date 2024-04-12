@@ -24,6 +24,7 @@ using namespace amrex;
  * @param[in] thin_xforce_lev x-component of forces on thin immersed bodies
  * @param[in] thin_yforce_lev y-component of forces on thin immersed bodies
  * @param[in] thin_zforce_lev z-component of forces on thin immersed bodies
+ * @param[in] force_fac scaling factor applied to ramp up forcing
  */
 
 void add_thin_body_sources ( MultiFab & rho_u_rhs,
@@ -34,7 +35,8 @@ void add_thin_body_sources ( MultiFab & rho_u_rhs,
                              std::unique_ptr<iMultiFab>& zflux_imask_lev,
                              std::unique_ptr<MultiFab>& thin_xforce_lev,
                              std::unique_ptr<MultiFab>& thin_yforce_lev,
-                             std::unique_ptr<MultiFab>& thin_zforce_lev)
+                             std::unique_ptr<MultiFab>& thin_zforce_lev,
+                             Real force_fac)
 {
     BL_PROFILE_REGION("erf_add_thin_body_sources()");
 
@@ -45,25 +47,32 @@ void add_thin_body_sources ( MultiFab & rho_u_rhs,
     // *****************************************************************************
     // If a thin immersed body is present, add forcing terms
     // *****************************************************************************
+    //
+    // Note: Without any force regularization, the body force only acts on
+    //       local faces. If there is no substepping, then regardless of what
+    //       the local RHS value is, any change to the momentum at these faces
+    //       will immediately be negated when no penetration is enforced during
+    //       FillPatch.
+
     if (l_have_thin_xforce) {
-        MultiFab::Copy(*thin_xforce_lev, xmom_src, 0, 0, 1, 0);
-        thin_xforce_lev->mult(-1., 0, 1, 0);
+        MultiFab::Copy(*thin_xforce_lev, rho_u_rhs, 0, 0, 1, 0);
         ApplyInvertedMask(*thin_xforce_lev, *xflux_imask_lev, 0);
-        MultiFab::Add(xmom_src, *thin_xforce_lev, 0, 0, 1, 0);
+        thin_xforce_lev->mult(-force_fac, 0, 1, 0);
+        MultiFab::Add(rho_u_rhs, *thin_xforce_lev, 0, 0, 1, 0);
     }
 
     if (l_have_thin_yforce) {
-        MultiFab::Copy(*thin_yforce_lev, ymom_src, 0, 0, 1, 0);
-        thin_yforce_lev->mult(-1., 0, 1, 0);
+        MultiFab::Copy(*thin_yforce_lev, rho_v_rhs, 0, 0, 1, 0);
         ApplyInvertedMask(*thin_yforce_lev, *yflux_imask_lev, 0);
-        MultiFab::Add(ymom_src, *thin_yforce_lev, 0, 0, 1, 0);
+        thin_yforce_lev->mult(-force_fac, 0, 1, 0);
+        MultiFab::Add(rho_v_rhs, *thin_yforce_lev, 0, 0, 1, 0);
     }
 
     if (l_have_thin_zforce) {
-        MultiFab::Copy(*thin_zforce_lev, zmom_src, 0, 0, 1, 0);
-        thin_zforce_lev->mult(-1., 0, 1, 0);
+        MultiFab::Copy(*thin_zforce_lev, rho_w_rhs, 0, 0, 1, 0);
         ApplyInvertedMask(*thin_zforce_lev, *zflux_imask_lev, 0);
-        MultiFab::Add(zmom_src, *thin_zforce_lev, 0, 0, 1, 0);
+        thin_zforce_lev->mult(-force_fac, 0, 1, 0);
+        MultiFab::Add(rho_w_rhs, *thin_zforce_lev, 0, 0, 1, 0);
     }
 
 #if 0

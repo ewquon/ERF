@@ -194,6 +194,7 @@ struct AdvChoice {
         pp.queryarr("zero_xflux_faces", zero_xflux);
         pp.queryarr("zero_yflux_faces", zero_yflux);
         pp.queryarr("zero_zflux_faces", zero_zflux);
+        pp.query("thinbody_force_ramp_time", thinbody_force_ramp_time);
     }
 
     void display()
@@ -301,5 +302,6 @@ struct AdvChoice {
     amrex::Vector<amrex::IntVect> zero_xflux;
     amrex::Vector<amrex::IntVect> zero_yflux;
     amrex::Vector<amrex::IntVect> zero_zflux;
+    amrex::Real thinbody_force_ramp_time = 0.0;
 };
 #endif

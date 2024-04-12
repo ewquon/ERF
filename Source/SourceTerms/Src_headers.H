@@ -67,7 +67,8 @@ void add_thin_body_sources (amrex::MultiFab& xmom_source,
                             std::unique_ptr<amrex::iMultiFab>& zflux_imask_lev,
                             std::unique_ptr<amrex::MultiFab>& thin_xforce_lev,
                             std::unique_ptr<amrex::MultiFab>& thin_yforce_lev,
-                            std::unique_ptr<amrex::MultiFab>& thin_zforce_lev);
+                            std::unique_ptr<amrex::MultiFab>& thin_zforce_lev,
+                            amrex::Real force_fac);
 
 #if defined(ERF_USE_NETCDF)
 void

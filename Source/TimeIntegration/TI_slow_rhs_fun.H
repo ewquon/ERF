@@ -50,6 +50,13 @@
                      dptr_rhotheta_src, dptr_rhoqt_src,
                      dptr_wbar_sub, d_rayleigh_ptrs_at_lev);
 
+        // Ramp up the thin-body force
+        amrex::Real force_fac = 1.0;
+        if (old_stage_time < solverChoice.advChoice.thinbody_force_ramp_time) {
+            force_fac = old_stage_time / solverChoice.advChoice.thinbody_force_ramp_time;
+            amrex::Print() << "Thinbody force factor: " << force_fac << std::endl;
+        }
+
         // Moving terrain
         if ( solverChoice.use_terrain &&  (solverChoice.terrain_type == TerrainType::Moving) )
         {
@@ -135,7 +142,8 @@
 
             add_thin_body_sources(S_rhs[IntVars::xmom], S_rhs[IntVars::ymom], S_rhs[IntVars::zmom],
                                   xflux_imask[level], yflux_imask[level], zflux_imask[level],
-                                  thin_xforce[level], thin_yforce[level], thin_zforce[level]);
+                                  thin_xforce[level], thin_yforce[level], thin_zforce[level],
+                                  force_fac);
 
             // We define and evolve (rho theta)_0 in order to re-create p_0 in a way that is consistent
             //    with our update of (rho theta) but does NOT maintain dp_0 / dz = -rho_0 g.  This is why
@@ -235,7 +243,27 @@
 
             add_thin_body_sources(S_rhs[IntVars::xmom], S_rhs[IntVars::ymom], S_rhs[IntVars::zmom],
                                   xflux_imask[level], yflux_imask[level], zflux_imask[level],
-                                  thin_xforce[level], thin_yforce[level], thin_zforce[level]);
+                                  thin_xforce[level], thin_yforce[level], thin_zforce[level],
+                                  force_fac);
+#ifndef AMREX_USE_GPU
+            if (nrk==2) {
+                // TODO: Implement particles to better manage and output the body forces
+                for ( amrex::MFIter mfi(S_rhs[IntVars::zmom],TileNoZ()); mfi.isValid(); ++mfi)
+                {
+                    const Box& tbz = mfi.nodaltilebox(2);
+                    const amrex::Array4<const amrex::Real> & fz       = thin_zforce[level]->const_array(mfi);
+                    const amrex::Array4<const         int> & mask     = zflux_imask[level]->const_array(mfi);
+                    const amrex::Array4<const amrex::Real> & zmom_rhs = S_rhs[IntVars::zmom].const_array(mfi);
+                    ParallelFor(tbz, [=] AMREX_GPU_DEVICE (int i, int j, int k) {
+                        if (mask(i,j,k)==0) {
+                            amrex::AllPrint() << "thin body fz"<<IntVect(i,j,k)<<" = " << fz(i,j,k)
+                                << " zmom src=" << zmom_rhs(i,j,k)
+                                << std::endl;
+                        }
+                    });
+                }
+            }
+#endif
         }
 
 #ifdef ERF_USE_NETCDF
@@ -418,9 +446,17 @@
                          z_phys_nd[level], ax[level], ay[level], az[level], detJ_cc[level], p0,
                          mapfac_m[level], mapfac_u[level], mapfac_v[level]);
 
+         // Ramp up the thin-body force
+         amrex::Real force_fac = 1.0;
+         if (old_stage_time < solverChoice.advChoice.thinbody_force_ramp_time) {
+             force_fac = old_stage_time / solverChoice.advChoice.thinbody_force_ramp_time;
+             amrex::Print() << "Thinbody force factor: " << force_fac << std::endl;
+         }
+
          add_thin_body_sources(S_rhs[IntVars::xmom], S_rhs[IntVars::ymom], S_rhs[IntVars::zmom],
                                xflux_imask[level], yflux_imask[level], zflux_imask[level],
-                               thin_xforce[level], thin_yforce[level], thin_zforce[level]);
+                               thin_xforce[level], thin_yforce[level], thin_zforce[level],
+                               force_fac);
 
 #ifdef ERF_USE_NETCDF
         // Populate RHS for relaxation zones if using real bcs

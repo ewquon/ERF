@@ -15,9 +15,9 @@ using namespace amrex;
 /**
  * Function for computing the slow RHS for the evolution equations for the density, potential temperature and momentum.
  *
- * @param[in] xmom_src source terms for x-momentum
- * @param[in] ymom_src source terms for y-momentum
- * @param[in] zmom_src source terms for z-momentum
+ * @param[in] rho_u_rhs RHS of x-momentum
+ * @param[in] rho_v_rhs RHS of y-momentum
+ * @param[in] rho_w_rhs RHS of z-momentum
  * @param[in] xflux_imask_lev thin-body mask on x-faces
  * @param[in] yflux_imask_lev thin-body mask on y-faces
  * @param[in] zflux_imask_lev thin-body mask on z-faces
@@ -26,9 +26,9 @@ using namespace amrex;
  * @param[in] thin_zforce_lev z-component of forces on thin immersed bodies
  */
 
-void add_thin_body_sources ( MultiFab & xmom_src,
-                             MultiFab & ymom_src,
-                             MultiFab & zmom_src,
+void add_thin_body_sources ( MultiFab & rho_u_rhs,
+                             MultiFab & rho_v_rhs,
+                             MultiFab & rho_w_rhs,
                              std::unique_ptr<iMultiFab>& xflux_imask_lev,
                              std::unique_ptr<iMultiFab>& yflux_imask_lev,
                              std::unique_ptr<iMultiFab>& zflux_imask_lev,

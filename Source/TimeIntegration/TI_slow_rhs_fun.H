@@ -133,7 +133,7 @@
 #endif
                              fr_as_crse, fr_as_fine);
 
-            add_thin_body_sources(xmom_src, ymom_src, zmom_src,
+            add_thin_body_sources(S_rhs[IntVars::xmom], S_rhs[IntVars::ymom], S_rhs[IntVars::zmom],
                                   xflux_imask[level], yflux_imask[level], zflux_imask[level],
                                   thin_xforce[level], thin_yforce[level], thin_zforce[level]);
 
@@ -233,7 +233,7 @@
 #endif
                              fr_as_crse, fr_as_fine);
 
-            add_thin_body_sources(xmom_src, ymom_src, zmom_src,
+            add_thin_body_sources(S_rhs[IntVars::xmom], S_rhs[IntVars::ymom], S_rhs[IntVars::zmom],
                                   xflux_imask[level], yflux_imask[level], zflux_imask[level],
                                   thin_xforce[level], thin_yforce[level], thin_zforce[level]);
         }
@@ -418,7 +418,7 @@
                          z_phys_nd[level], ax[level], ay[level], az[level], detJ_cc[level], p0,
                          mapfac_m[level], mapfac_u[level], mapfac_v[level]);
 
-         add_thin_body_sources(xmom_src, ymom_src, zmom_src,
+         add_thin_body_sources(S_rhs[IntVars::xmom], S_rhs[IntVars::ymom], S_rhs[IntVars::zmom],
                                xflux_imask[level], yflux_imask[level], zflux_imask[level],
                                thin_xforce[level], thin_yforce[level], thin_zforce[level]);
 

@@ -247,18 +247,15 @@
                                   force_fac);
 #ifndef AMREX_USE_GPU
             if (nrk==2) {
-                // TODO: Implement particles to better manage and output the body forces
-                for ( amrex::MFIter mfi(S_rhs[IntVars::zmom],TileNoZ()); mfi.isValid(); ++mfi)
+                // TODO: Implement particles to better manage and output the body forces; hard-coded for fy
+                for ( amrex::MFIter mfi(*thin_yforce[level],TileNoZ()); mfi.isValid(); ++mfi)
                 {
-                    const Box& tbz = mfi.nodaltilebox(2);
-                    const amrex::Array4<const amrex::Real> & fz       = thin_zforce[level]->const_array(mfi);
-                    const amrex::Array4<const         int> & mask     = zflux_imask[level]->const_array(mfi);
-                    const amrex::Array4<const amrex::Real> & zmom_rhs = S_rhs[IntVars::zmom].const_array(mfi);
-                    ParallelFor(tbz, [=] AMREX_GPU_DEVICE (int i, int j, int k) {
-                        if (mask(i,j,k)==0) {
-                            amrex::AllPrint() << "thin body fz"<<IntVect(i,j,k)<<" = " << fz(i,j,k)
-                                << " zmom src=" << zmom_rhs(i,j,k)
-                                << std::endl;
+                    const Box& tby = mfi.nodaltilebox(1);
+                    const amrex::Array4<const amrex::Real> & fy    = thin_yforce[level]->const_array(mfi);
+                    const amrex::Array4<const         int> & ymask = yflux_imask[level]->const_array(mfi);
+                    ParallelFor(tby, [=] AMREX_GPU_DEVICE (int i, int j, int k) {
+                        if (ymask(i,j,k)==0) {
+                            amrex::AllPrint() << "thin body fy"<<IntVect(i,j,k)<<" = " << fy(i,j,k) << std::endl;
                         }
                     });
                 }

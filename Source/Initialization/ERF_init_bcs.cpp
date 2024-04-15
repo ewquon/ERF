@@ -73,6 +73,12 @@ void ERF::init_bcs ()
               phys_bc_type[ori] = ERF_BC::outflow;
             domain_bc_type[ori] = "Outflow";
         }
+        else if (bc_type == "foextrap")
+        {
+            // Print() << bcid << " set to first-order outflow.\n";
+              phys_bc_type[ori] = ERF_BC::foextrap;
+            domain_bc_type[ori] = "FOExtrap";
+        }
         else if (bc_type == "open")
         {
             // Print() << bcid << " set to open.\n";
@@ -283,18 +289,22 @@ void ERF::init_bcs ()
                     domain_bcs_type[BCVars::xvel_bc+dir].setHi(dir, ERFBCType::reflect_odd);
                 }
             }
-            else if (bct == ERF_BC::outflow)
+            else if ((bct == ERF_BC::outflow) || (bct == ERF_BC::foextrap))
             {
                 if (side == Orientation::low) {
                     for (int i = 0; i < AMREX_SPACEDIM; i++) {
                         domain_bcs_type[BCVars::xvel_bc+i].setLo(dir, ERFBCType::foextrap);
                     }
-                    domain_bcs_type[BCVars::xvel_bc+dir].setLo(dir, ERFBCType::neumann_int);
+                    if (bct == ERF_BC::outflow) {
+                        domain_bcs_type[BCVars::xvel_bc+dir].setLo(dir, ERFBCType::neumann_int);
+                    }
                 } else {
                     for (int i = 0; i < AMREX_SPACEDIM; i++) {
                         domain_bcs_type[BCVars::xvel_bc+i].setHi(dir, ERFBCType::foextrap);
                     }
-                    domain_bcs_type[BCVars::xvel_bc+dir].setHi(dir, ERFBCType::neumann_int);
+                    if (bct == ERF_BC::outflow) {
+                        domain_bcs_type[BCVars::xvel_bc+dir].setHi(dir, ERFBCType::neumann_int);
+                    }
                 }
             }
             else if (bct == ERF_BC::open)
@@ -400,7 +410,7 @@ void ERF::init_bcs ()
                     }
                 }
             }
-            else if ( bct == ERF_BC::outflow )
+            else if ((bct == ERF_BC::outflow) || (bct == ERF_BC::foextrap))
             {
                 if (side == Orientation::low) {
                     for (int i = 0; i < NVAR_max; i++) {

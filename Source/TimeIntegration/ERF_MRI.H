@@ -296,7 +296,7 @@ public:
                 } // ks
 
             } else {
-                no_substep(*S_sum, S_old, *F_slow, time + nsubsteps*dtau, nsubsteps*dtau, nrk);
+                no_substep(*S_sum, S_old, *F_slow, time_stage, time_stage - time, nrk);
             }
 
             // ****************************************************

@@ -75,7 +75,7 @@ AdvectionSrcForOpenBC_Tangent_Xmom (const Box& bxx,
     });
 }
 
-/** Compute advection tendencies for x momentum tangential to BC (2nd order)*/
+/** Compute advection tendencies for y momentum tangential to BC (2nd order)*/
 void
 AdvectionSrcForOpenBC_Tangent_Ymom (const Box& bxy,
                                     const int& dir,
@@ -115,7 +115,7 @@ AdvectionSrcForOpenBC_Tangent_Ymom (const Box& bxy,
     });
 }
 
-/** Compute advection tendencies for x momentum tangential to BC (2nd order)*/
+/** Compute advection tendencies for z momentum tangential to BC (2nd order)*/
 void
 AdvectionSrcForOpenBC_Tangent_Zmom (const Box& bxz,
                                     const int& dir,
@@ -175,7 +175,7 @@ AdvectionSrcForOpenBC_Tangent_Zmom (const Box& bxz,
     });
 }
 
-/** Compute advection tendencies for x momentum tangential to BC (2nd order)*/
+/** Compute advection tendencies for cons scalars tangential to BC (2nd order)*/
 void
 AdvectionSrcForOpenBC_Tangent_Cons (const Box& bx,
                                     const int& dir,

@@ -110,8 +110,8 @@ void erf_slow_rhs_post (int level, int finest_level,
     DiffChoice dc = solverChoice.diffChoice;
     TurbChoice tc = solverChoice.turbChoice[level];
 
-    const MultiFab* t_mean_mf = nullptr;
-    if (most) t_mean_mf = most->get_mac_avg(0,2);
+    const MultiFab* tv_mean_mf = nullptr;
+    if (most) tv_mean_mf = most->get_mac_avg(0,4);
 
     const bool l_use_terrain      = solverChoice.use_terrain;
     const bool l_reflux = (solverChoice.coupling_type != CouplingType::OneWay);
@@ -404,7 +404,7 @@ void erf_slow_rhs_post (int level, int finest_level,
 
                 if (l_use_diff) {
 
-                    const Array4<const Real> tm_arr = t_mean_mf ? t_mean_mf->const_array(mfi) : Array4<const Real>{};
+                    const Array4<const Real> tvm_arr = tv_mean_mf ? tv_mean_mf->const_array(mfi) : Array4<const Real>{};
 
                     if (l_use_terrain) {
                         DiffusionSrcForState_T(tbx, domain, start_comp, num_comp, exp_most, rot_most, u, v,
@@ -414,7 +414,7 @@ void erf_slow_rhs_post (int level, int finest_level,
                                                dxInv, SmnSmn_a, mf_m, mf_u, mf_v,
                                                hfx_x, hfx_y, hfx_z, q1fx_x, q1fx_y, q1fx_z,q2fx_z, diss,
                                                mu_turb, dc, tc,
-                                               tm_arr, grav_gpu, bc_ptr_d, use_most, l_use_moisture);
+                                               tvm_arr, grav_gpu, bc_ptr_d, use_most, l_use_moisture);
                     } else {
                         DiffusionSrcForState_N(tbx, domain, start_comp, num_comp, exp_most, u, v,
                                                new_cons, cur_prim, cell_rhs,
@@ -422,7 +422,7 @@ void erf_slow_rhs_post (int level, int finest_level,
                                                dxInv, SmnSmn_a, mf_m, mf_u, mf_v,
                                                hfx_z, q1fx_z, q2fx_z, diss,
                                                mu_turb, dc, tc,
-                                               tm_arr, grav_gpu, bc_ptr_d, use_most, l_use_moisture);
+                                               tvm_arr, grav_gpu, bc_ptr_d, use_most, l_use_moisture);
                     }
                 } // use_diff
             } // valid slow var

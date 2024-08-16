@@ -34,7 +34,7 @@ using namespace amrex;
  * @param[in]  mu_turb turbulent viscosity
  * @param[in]  diffChoice container of diffusion parameters
  * @param[in]  turbChoice container of turbulence parameters
- * @param[in]  tm_arr theta mean array
+ * @param[in]  tvm_arr thetav mean array
  * @param[in]  grav_gpu gravity vector
  * @param[in]  bc_ptr container with boundary conditions
  * @param[in]  use_most whether we have turned on MOST BCs
@@ -74,7 +74,7 @@ DiffusionSrcForState_T (const Box& bx, const Box& domain,
                         const Array4<const Real>& mu_turb,
                         const DiffChoice &diffChoice,
                         const TurbChoice &turbChoice,
-                        const Array4<const Real>& tm_arr,
+                        const Array4<const Real>& tvm_arr,
                         const GpuArray<Real,AMREX_SPACEDIM> grav_gpu,
                         const BCRec* bc_ptr,
                         const bool use_most,
@@ -744,7 +744,7 @@ DiffusionSrcForState_T (const Box& bx, const Box& domain,
             const Real met_h_zeta = detJ(i,j,k);
             cell_rhs(i, j, k, qty_index) += ComputeQKESourceTerms(i,j,k,u,v,cell_data,cell_prim,
                                                                   mu_turb,cellSizeInv,domain,
-                                                                  pbl_mynn_B1_l,tm_arr(i,j,0),
+                                                                  pbl_mynn_B1_l,tvm_arr(i,j,0),
                                                                   use_moisture,
                                                                   c_ext_dir_on_zlo, c_ext_dir_on_zhi,
                                                                   u_ext_dir_on_zlo, u_ext_dir_on_zhi,

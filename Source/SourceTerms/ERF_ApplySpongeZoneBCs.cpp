@@ -13,7 +13,9 @@ ApplySpongeZoneBCsForCC (
   const Geometry geom,
   const Box& bx,
   const Array4<Real>& cell_rhs,
-  const Array4<const Real>& cell_data)
+  const Array4<const Real>& cell_data,
+  const Array4<const Real>& rho0,
+  const Array4<const Real>& p0)
 {
     // Domain cell size and real bounds
     auto dx = geom.CellSizeArray();
@@ -35,7 +37,11 @@ ApplySpongeZoneBCsForCC (
     const Real zlo_sponge_end   = spongeChoice.zlo_sponge_end;
     const Real zhi_sponge_start = spongeChoice.zhi_sponge_start;
 
+    const bool damp_to_rhse = spongeChoice.use_basestate;
     const Real sponge_density = spongeChoice.sponge_density;
+
+    const bool damp_temperature = spongeChoice.damp_temperature;
+    const Real sponge_temperature = spongeChoice.sponge_temperature;
 
     // Domain valid box
     const Box& domain = geom.Domain();
@@ -63,18 +69,26 @@ ApplySpongeZoneBCsForCC (
         Real y = ProbLoArr[1] + (jj+0.5) * dx[1];
         Real z = ProbLoArr[2] + (kk+0.5) * dx[2];
 
+        Real rho_ref      = (damp_to_rhse) ? rho0(i,j,k) : sponge_density;
+        Real rhotheta_ref = (damp_to_rhse) ? getRhoThetagivenP(p0(i,j,k))
+                                           : sponge_density*sponge_temperature;
+
         // x left sponge
         if(use_xlo_sponge_damping){
             if (x < xlo_sponge_end) {
                 Real xi = (xlo_sponge_end - x) / (xlo_sponge_end - ProbLoArr[0]);
-                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - sponge_density);
+                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - rho_ref);
+                if (damp_temperature)
+                    cell_rhs(i, j, k, 1) -= sponge_strength * xi * xi * (cell_data(i, j, k, 1) - rhotheta_ref);
             }
         }
         // x right sponge
         if(use_xhi_sponge_damping){
             if (x > xhi_sponge_start) {
                 Real xi = (x - xhi_sponge_start) / (ProbHiArr[0] - xhi_sponge_start);
-                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - sponge_density);
+                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - rho_ref);
+                if (damp_temperature)
+                    cell_rhs(i, j, k, 1) -= sponge_strength * xi * xi * (cell_data(i, j, k, 1) - rhotheta_ref);
             }
         }
 
@@ -82,29 +96,37 @@ ApplySpongeZoneBCsForCC (
         if(use_ylo_sponge_damping){
             if (y < ylo_sponge_end) {
                 Real xi = (ylo_sponge_end - y) / (ylo_sponge_end - ProbLoArr[1]);
-                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - sponge_density);
+                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - rho_ref);
+                if (damp_temperature)
+                    cell_rhs(i, j, k, 1) -= sponge_strength * xi * xi * (cell_data(i, j, k, 1) - rhotheta_ref);
             }
         }
-        // x right sponge
+        // y right sponge
         if(use_yhi_sponge_damping){
             if (y > yhi_sponge_start) {
                 Real xi = (y - yhi_sponge_start) / (ProbHiArr[1] - yhi_sponge_start);
-                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - sponge_density);
+                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - rho_ref);
+                if (damp_temperature)
+                    cell_rhs(i, j, k, 1) -= sponge_strength * xi * xi * (cell_data(i, j, k, 1) - rhotheta_ref);
             }
         }
 
-        // x left sponge
+        // z left sponge
         if(use_zlo_sponge_damping){
             if (z < zlo_sponge_end) {
                 Real xi = (zlo_sponge_end - z) / (zlo_sponge_end - ProbLoArr[2]);
-                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - sponge_density);
+                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - rho_ref);
+                if (damp_temperature)
+                    cell_rhs(i, j, k, 1) -= sponge_strength * xi * xi * (cell_data(i, j, k, 1) - rhotheta_ref);
             }
         }
-        // x right sponge
+        // z right sponge
         if(use_zhi_sponge_damping){
             if (z > zhi_sponge_start) {
                 Real xi = (z - zhi_sponge_start) / (ProbHiArr[2] - zhi_sponge_start);
-                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - sponge_density);
+                cell_rhs(i, j, k, 0) -= sponge_strength * xi * xi * (cell_data(i, j, k, 0) - rho_ref);
+                if (damp_temperature)
+                    cell_rhs(i, j, k, 1) -= sponge_strength * xi * xi * (cell_data(i, j, k, 1) - rhotheta_ref);
             }
         }
     });
@@ -122,7 +144,8 @@ ApplySpongeZoneBCsForMom (
   const Array4<Real>& rho_w_rhs,
   const Array4<const Real>& rho_u,
   const Array4<const Real>& rho_v,
-  const Array4<const Real>& rho_w)
+  const Array4<const Real>& rho_w,
+  const Array4<const Real>& rho0)
 {
     // Domain cell size and real bounds
     auto dx = geom.CellSizeArray();
@@ -144,6 +167,7 @@ ApplySpongeZoneBCsForMom (
     const Real zlo_sponge_end   = spongeChoice.zlo_sponge_end;
     const Real zhi_sponge_start = spongeChoice.zhi_sponge_start;
 
+    const bool damp_to_rhse = spongeChoice.use_basestate;
     const Real sponge_density = spongeChoice.sponge_density;
     const Real sponge_x_velocity = spongeChoice.sponge_x_velocity;
     const Real sponge_y_velocity = spongeChoice.sponge_y_velocity;
@@ -175,18 +199,20 @@ ApplySpongeZoneBCsForMom (
         Real y = ProbLoArr[1] + (jj+0.5) * dx[1];
         Real z = ProbLoArr[2] + (kk+0.5) * dx[2];
 
+        Real rho_ref = (damp_to_rhse) ? rho0(i,j,k) : sponge_density;
+
         // x lo sponge
         if(use_xlo_sponge_damping){
             if (x < xlo_sponge_end) {
                 Real xi = (xlo_sponge_end - x) / (xlo_sponge_end - ProbLoArr[0]);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - sponge_density*sponge_x_velocity);
+                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - rho_ref*sponge_x_velocity);
             }
         }
         // x hi sponge
         if(use_xhi_sponge_damping){
             if (x > xhi_sponge_start) {
                 Real xi = (x - xhi_sponge_start) / (ProbHiArr[0] - xhi_sponge_start);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - sponge_density*sponge_x_velocity);
+                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - rho_ref*sponge_x_velocity);
             }
         }
 
@@ -194,14 +220,14 @@ ApplySpongeZoneBCsForMom (
         if(use_ylo_sponge_damping){
             if (y < ylo_sponge_end) {
                 Real xi = (ylo_sponge_end - y) / (ylo_sponge_end - ProbLoArr[1]);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - sponge_density*sponge_x_velocity);
+                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - rho_ref*sponge_x_velocity);
             }
         }
         // x right sponge
         if(use_yhi_sponge_damping){
             if (y > yhi_sponge_start) {
                 Real xi = (y - yhi_sponge_start) / (ProbHiArr[1] - yhi_sponge_start);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - sponge_density*sponge_x_velocity);
+                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - rho_ref*sponge_x_velocity);
             }
         }
 
@@ -209,7 +235,7 @@ ApplySpongeZoneBCsForMom (
         if(use_zlo_sponge_damping){
             if (z < zlo_sponge_end) {
                 Real xi = (zlo_sponge_end - z) / (zlo_sponge_end - ProbLoArr[2]);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - sponge_density*sponge_x_velocity);
+                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - rho_ref*sponge_x_velocity);
             }
         }
 
@@ -218,7 +244,7 @@ ApplySpongeZoneBCsForMom (
         if(use_zhi_sponge_damping){
             if (z > zhi_sponge_start) {
                 Real xi = (z - zhi_sponge_start) / (ProbHiArr[2] - zhi_sponge_start);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - sponge_density*sponge_x_velocity);
+                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - rho_ref*sponge_x_velocity);
             }
         }
     });
@@ -234,18 +260,20 @@ ApplySpongeZoneBCsForMom (
         Real y = ProbLoArr[1] + jj * dx[1];
         Real z = ProbLoArr[2] + (kk+0.5) * dx[2];
 
+        Real rho_ref = (damp_to_rhse) ? rho0(i,j,k) : sponge_density;
+
         // x lo sponge
         if(use_xlo_sponge_damping){
             if (x < xlo_sponge_end) {
                 Real xi = (xlo_sponge_end - x) / (xlo_sponge_end - ProbLoArr[0]);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - sponge_density*sponge_y_velocity);
+                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - rho_ref*sponge_y_velocity);
             }
         }
         // x hi sponge
         if(use_xhi_sponge_damping){
             if (x > xhi_sponge_start) {
                 Real xi = (x - xhi_sponge_start) / (ProbHiArr[0] - xhi_sponge_start);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - sponge_density*sponge_y_velocity);
+                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - rho_ref*sponge_y_velocity);
             }
         }
 
@@ -253,14 +281,14 @@ ApplySpongeZoneBCsForMom (
         if(use_ylo_sponge_damping){
             if (y < ylo_sponge_end) {
                 Real xi = (ylo_sponge_end - y) / (ylo_sponge_end - ProbLoArr[1]);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - sponge_density*sponge_y_velocity);
+                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - rho_ref*sponge_y_velocity);
             }
         }
         // x right sponge
         if(use_yhi_sponge_damping){
             if (y > yhi_sponge_start) {
                 Real xi = (y - yhi_sponge_start) / (ProbHiArr[1] - yhi_sponge_start);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - sponge_density*sponge_y_velocity);
+                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - rho_ref*sponge_y_velocity);
             }
         }
 
@@ -268,7 +296,7 @@ ApplySpongeZoneBCsForMom (
         if(use_zlo_sponge_damping){
             if (z < zlo_sponge_end) {
                 Real xi = (zlo_sponge_end - z) / (zlo_sponge_end - ProbLoArr[2]);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - sponge_density*sponge_y_velocity);
+                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - rho_ref*sponge_y_velocity);
             }
         }
 
@@ -277,7 +305,7 @@ ApplySpongeZoneBCsForMom (
         if(use_zhi_sponge_damping){
             if (z > zhi_sponge_start) {
                 Real xi = (z - zhi_sponge_start) / (ProbHiArr[2] - zhi_sponge_start);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - sponge_density*sponge_y_velocity);
+                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - rho_ref*sponge_y_velocity);
             }
         }
     });
@@ -293,18 +321,20 @@ ApplySpongeZoneBCsForMom (
         Real y = ProbLoArr[1] + (jj+0.5) * dx[1];
         Real z = ProbLoArr[2] + kk * dx[2];
 
+        Real rho_ref = (damp_to_rhse) ? rho0(i,j,k) : sponge_density;
+
         // x left sponge
         if(use_xlo_sponge_damping){
             if (x < xlo_sponge_end) {
                 Real xi = (xlo_sponge_end - x) / (xlo_sponge_end - ProbLoArr[0]);
-                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - sponge_density*sponge_z_velocity);
+                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - rho_ref*sponge_z_velocity);
             }
         }
         // x right sponge
         if(use_xhi_sponge_damping){
             if (x > xhi_sponge_start) {
                 Real xi = (x - xhi_sponge_start) / (ProbHiArr[0] - xhi_sponge_start);
-                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - sponge_density*sponge_z_velocity);
+                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - rho_ref*sponge_z_velocity);
             }
         }
 
@@ -312,14 +342,14 @@ ApplySpongeZoneBCsForMom (
         if(use_ylo_sponge_damping){
             if (y < ylo_sponge_end) {
                 Real xi = (ylo_sponge_end - y) / (ylo_sponge_end - ProbLoArr[1]);
-                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - sponge_density*sponge_z_velocity);
+                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - rho_ref*sponge_z_velocity);
             }
         }
         // x right sponge
         if(use_yhi_sponge_damping){
             if (y > yhi_sponge_start) {
                 Real xi = (y - yhi_sponge_start) / (ProbHiArr[1] - yhi_sponge_start);
-                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - sponge_density*sponge_z_velocity);
+                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - rho_ref*sponge_z_velocity);
             }
         }
 
@@ -327,7 +357,7 @@ ApplySpongeZoneBCsForMom (
         if(use_zlo_sponge_damping){
             if (z < zlo_sponge_end) {
                 Real xi = (zlo_sponge_end - z) / (zlo_sponge_end - ProbLoArr[2]);
-                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - sponge_density*sponge_z_velocity);
+                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - rho_ref*sponge_z_velocity);
             }
         }
 
@@ -336,7 +366,7 @@ ApplySpongeZoneBCsForMom (
         if(use_zhi_sponge_damping){
             if (z > zhi_sponge_start) {
                 Real xi = (z - zhi_sponge_start) / (ProbHiArr[2] - zhi_sponge_start);
-                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - sponge_density*sponge_z_velocity);
+                rho_w_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_w(i, j, k) - rho_ref*sponge_z_velocity);
             }
         }
     });

@@ -36,10 +36,13 @@ struct SpongeChoice {
         pp.query("zlo_sponge_end"  , zlo_sponge_end);
         pp.query("zhi_sponge_start", zhi_sponge_start);
 
+        pp.query("sponge_use_basestate", use_basestate); // alternative to specifying a constant sponge_density (and sponge_temperature)
         pp.query("sponge_density" , sponge_density);
         pp.query("sponge_x_velocity" , sponge_x_velocity);
         pp.query("sponge_y_velocity" , sponge_y_velocity);
         pp.query("sponge_z_velocity" , sponge_z_velocity);
+        pp.query("sponge_temperature", sponge_temperature);
+        pp.query("sponge_damp_temperature", damp_temperature);
     }
 
     void display()
@@ -63,6 +66,10 @@ struct SpongeChoice {
     amrex::Real xlo_sponge_end, xhi_sponge_start;
     amrex::Real ylo_sponge_end, yhi_sponge_start;
     amrex::Real zlo_sponge_end, zhi_sponge_start;
-    amrex::Real sponge_density, sponge_x_velocity, sponge_y_velocity, sponge_z_velocity;
+
+    bool use_basestate = false;
+    bool damp_temperature = false;
+    amrex::Real sponge_density, sponge_temperature;
+    amrex::Real sponge_x_velocity, sponge_y_velocity, sponge_z_velocity;
 };
 #endif

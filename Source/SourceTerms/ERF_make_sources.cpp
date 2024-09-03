@@ -33,6 +33,7 @@ void make_sources (int level,
                    int /*nrk*/, Real dt, Real time,
                    Vector<MultiFab>& S_data,
                    const  MultiFab & S_prim,
+                   const  MultiFab & base_state,
                           MultiFab & source,
 #ifdef ERF_USE_RRTMGP
                    const MultiFab* qheating_rates,
@@ -181,6 +182,11 @@ void make_sources (int level,
         const Array4<const Real> & cell_data  = S_data[IntVars::cons].array(mfi);
         const Array4<const Real> & cell_prim  = S_prim.array(mfi);
         const Array4<Real>       & cell_src   = source.array(mfi);
+
+        MultiFab r_hse(base_state, make_alias, 0, 1); // r_0 is first component
+        MultiFab p_hse(base_state, make_alias, 1, 1); // p_0 is second componentt
+        const Array4<const Real> & rho0_arr = r_hse.const_array(mfi);
+        const Array4<const Real> &   p0_arr = p_hse.const_array(mfi);
 
 #ifdef ERF_USE_RRTMGP
         // *************************************************************************************
@@ -348,7 +354,8 @@ void make_sources (int level,
         // 7. Add sponging
         // *************************************************************************************
         if(!(solverChoice.spongeChoice.sponge_type == "input_sponge")){
-            ApplySpongeZoneBCsForCC(solverChoice.spongeChoice, geom, bx, cell_src, cell_data);
+            ApplySpongeZoneBCsForCC(solverChoice.spongeChoice, geom, bx, cell_src, cell_data,
+                                    rho0_arr, p0_arr);
         }
 
         // *************************************************************************************

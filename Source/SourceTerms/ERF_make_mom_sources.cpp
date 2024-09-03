@@ -41,6 +41,7 @@ void make_mom_sources (int /*level*/,
                        int /*nrk*/, Real dt, Real time,
                        Vector<MultiFab>& S_data,
                        const  MultiFab & S_prim,
+                       const  MultiFab & base_state,
                        const  MultiFab & /*xvel*/,
                        const  MultiFab & /*yvel*/,
                               MultiFab & xmom_src,
@@ -204,6 +205,9 @@ void make_mom_sources (int /*level*/,
         const Array4<const Real>&     rho_u = S_data[IntVars::xmom].array(mfi);
         const Array4<const Real>&     rho_v = S_data[IntVars::ymom].array(mfi);
         const Array4<const Real>&     rho_w = S_data[IntVars::zmom].array(mfi);
+
+        MultiFab r_hse(base_state, make_alias, 0, 1); // r_0  is first  component
+        const Array4<const Real>&  rho0_arr = r_hse.const_array(mfi);
 
         const Array4<      Real>& xmom_src_arr = xmom_src.array(mfi);
         const Array4<      Real>& ymom_src_arr = ymom_src.array(mfi);
@@ -410,13 +414,15 @@ void make_mom_sources (int /*level*/,
         // *****************************************************************************
         if(solverChoice.spongeChoice.sponge_type == "input_sponge")
         {
-             ApplySpongeZoneBCsForMom_ReadFromFile(solverChoice.spongeChoice, geom, tbx, tby, cell_data,
-                                 xmom_src_arr, ymom_src_arr, rho_u, rho_v, d_sponge_ptrs_at_lev);
+             ApplySpongeZoneBCsForMom_ReadFromFile(solverChoice.spongeChoice, geom, tbx, tby,
+                                                   cell_data, xmom_src_arr, ymom_src_arr,
+                                                   rho_u, rho_v, d_sponge_ptrs_at_lev);
         }
         else
         {
             ApplySpongeZoneBCsForMom(solverChoice.spongeChoice, geom, tbx, tby, tbz,
-                                 xmom_src_arr, ymom_src_arr, zmom_src_arr, rho_u, rho_v, rho_w);
+                                     xmom_src_arr, ymom_src_arr, zmom_src_arr,
+                                     rho_u, rho_v, rho_w, rho0_arr);
         }
 
     } // mfi

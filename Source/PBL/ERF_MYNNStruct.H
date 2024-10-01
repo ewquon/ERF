@@ -33,7 +33,6 @@ struct MYNNLevel25 {
         amrex::Real D = Phi2*Phi4 + Phi5*Phi3;
         SM = alphac * A1 * (Phi3 - 3*C1*Phi4) / D;
         SH = alphac * A2 * (Phi2 + 3*C1*Phi5) / D;
-        SQ = 3.0 * SM; // revised in NN09
     }
 
     // Closure coefficients (from Nakanishi & Niino 2009 [NN09])
@@ -108,6 +107,18 @@ struct MYNNLevel2 {
     {
         AMREX_ASSERT(initialized);
         return A1*F1/(A2*F2) * (Rf1-Rf) / (Rf2-Rf) * calc_SH(Rf);
+    }
+
+    AMREX_GPU_DEVICE
+    AMREX_FORCE_INLINE
+    void calc_SM_SH (amrex::Real& SM,
+                     amrex::Real& SH,
+                     const amrex::Real GM,
+                     const amrex::Real GH) const
+    {
+        amrex::Real Rf = calc_Rf(GM,GH);
+        SH = calc_SH(Rf);
+        SM = A1*F1/(A2*F2) * (Rf1-Rf) / (Rf2-Rf) * SH;
     }
 
     bool initialized{false};

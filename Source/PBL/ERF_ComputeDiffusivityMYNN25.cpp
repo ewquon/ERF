@@ -212,22 +212,41 @@ ComputeDiffusivityMYNN25 (const MultiFab& xvel,
             // Calculate nondimensional production terms
             Real shearProd  = dudz*dudz + dvdz*dvdz;
             Real buoyProd   = -(CONST_GRAV/theta0) * dthetavdz; // no SGS clouds
-            Real L2_over_q2 = Lm*Lm/(qvel(i,j,k)*qvel(i,j,k));
-            Real GM         = L2_over_q2 * shearProd;
-            Real GH         = L2_over_q2 * buoyProd;
+            Real Lsq        = Lm * Lm;
+            Real qsq        = qvel(i,j,k) * qvel(i,j,k);
+            Real GM         = Lsq/qsq * shearProd;
+            Real GH         = Lsq/qsq * buoyProd;
 
             // Equilibrium (Level-2) q calculation follows NN09, Appendix 2
-            Real Rf  = level2.calc_Rf(GM, GH);
-            Real SM2 = level2.calc_SM(Rf);
-            Real qe2 = mynn.B1*Lm*Lm*SM2*(1.0-Rf)*shearProd;
-            Real qe  = (qe2 < 0.0) ? 0.0 : std::sqrt(qe2);
+#if 0
+            Real Rf   = level2.calc_Rf(GM, GH);
+            Real SM2  = level2.calc_SM(Rf);
+            Real SH2  = level2.calc_SH(Rf);
+            Real q2sq = mynn.B1*Lm*Lm*SM2*(1.0-Rf)*shearProd;
+#endif
+            Real SM2, SH2;
+            level2.calc_SM_SH(SM2, SH2, GM, GH);
+            Real q2sq = mynn.B1 * Lsq * (SM2*shearProd + SH2*buoyProd);
 
-            // Level 2 limiting (Helfand and Labraga 1988)
-            Real alphac  = (qvel(i,j,k) > qe) ? 1.0 : qvel(i,j,k) / (qe + eps);
-
-            // Level 2.5 stability functions
+            // Calculate stability functions
             Real SM, SH, SQ;
-            mynn.calc_stability_funcs(SM,SH,SQ,GM,GH,alphac);
+            if (qsq < q2sq) {
+                // Level 2 limiting (Helfand and Labraga 1988)
+                Real alphac = std::sqrt(qsq / q2sq); // 1 - alpha
+
+                //mynn.calc_stability_funcs(SM,SH,GM,GH,alphac);
+
+                // Apply limiter to level 2 functions as in original MYNN
+                // (following WRF)
+                SM = SM2 * alphac;
+                SH = SH2 * alphac;
+
+            } else {
+                // Level 2.5
+                mynn.calc_stability_funcs(SM,SH,GM,GH);
+            }
+
+            SQ = 3.0 * SM; // revised in NN09
 
             // Clip SM, SH following WRF
             SM = amrex::min(amrex::max(SM,mynn.SMmin), mynn.SMmax);

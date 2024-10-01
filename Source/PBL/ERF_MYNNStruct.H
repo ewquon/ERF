@@ -14,12 +14,11 @@ struct MYNNLevel25 {
      */
     AMREX_GPU_DEVICE
     AMREX_FORCE_INLINE
-    void calc_stability_funcs(amrex::Real& SM,
-                              amrex::Real& SH,
-                              amrex::Real& SQ,
-                              const amrex::Real GM,
-                              const amrex::Real GH,
-                              const amrex::Real alphac = 1.0) const
+    void calc_stability_funcs (amrex::Real& SM,
+                               amrex::Real& SH,
+                               const amrex::Real GM,
+                               const amrex::Real GH,
+                               const amrex::Real alphac = 1.0) const
     {
         amrex::Real alphac2 = alphac * alphac;
 
@@ -105,7 +104,7 @@ struct MYNNLevel2 {
 
     AMREX_GPU_DEVICE
     AMREX_FORCE_INLINE
-    amrex::Real calc_SM(const amrex::Real Rf) const
+    amrex::Real calc_SM (const amrex::Real Rf) const
     {
         AMREX_ASSERT(initialized);
         return A1*F1/(A2*F2) * (Rf1-Rf) / (Rf2-Rf) * calc_SH(Rf);

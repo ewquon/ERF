@@ -133,13 +133,13 @@ ComputeDiffusivityMYNN25 (const MultiFab& xvel,
             // Compute some partial derivatives that we will need (second order)
             // U and V derivatives are interpolated to account for staggered grid
             const Real met_h_zeta = use_terrain ? Compute_h_zeta_AtCellCenter(i,j,k,dxInv,z_nd_arr) : 1.0;
-            Real dthetadz, dudz, dvdz;
+            Real dthetavdz, dudz, dvdz;
             ComputeVerticalDerivativesPBL(i, j, k,
                                           uvel, vvel, cell_data, izmin, izmax, dz_inv/met_h_zeta,
                                           c_ext_dir_on_zlo, c_ext_dir_on_zhi,
                                           u_ext_dir_on_zlo, u_ext_dir_on_zhi,
                                           v_ext_dir_on_zlo, v_ext_dir_on_zhi,
-                                          dthetadz, dudz, dvdz,
+                                          dthetavdz, dudz, dvdz,
                                           RhoQv_comp, RhoQr_comp, use_most);
 
             // Spatially varying MOST
@@ -187,8 +187,8 @@ ComputeDiffusivityMYNN25 (const MultiFab& xvel,
 
             // Buoyancy length scale (NN09, Eqn. 55)
             Real l_B;
-            if (dthetadz > 0) {
-                Real N_brunt_vaisala = std::sqrt(CONST_GRAV/theta0 * dthetadz);
+            if (dthetavdz > 0) {
+                Real N_brunt_vaisala = std::sqrt(CONST_GRAV/theta0 * dthetavdz);
                 if (zeta < 0) {
                     Real qc = CONST_GRAV/theta0 * surface_heat_flux * l_T; // velocity scale
                     qc = std::pow(qc,1.0/3.0);
@@ -211,7 +211,7 @@ ComputeDiffusivityMYNN25 (const MultiFab& xvel,
 
             // Calculate nondimensional production terms
             Real shearProd  = dudz*dudz + dvdz*dvdz;
-            Real buoyProd   = -(CONST_GRAV/theta0) * dthetadz;
+            Real buoyProd   = -(CONST_GRAV/theta0) * dthetavdz; // no SGS clouds
             Real L2_over_q2 = Lm*Lm/(qvel(i,j,k)*qvel(i,j,k));
             Real GM         = L2_over_q2 * shearProd;
             Real GH         = L2_over_q2 * buoyProd;

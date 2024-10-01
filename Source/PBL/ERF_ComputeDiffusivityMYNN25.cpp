@@ -210,20 +210,14 @@ ComputeDiffusivityMYNN25 (const MultiFab& xvel,
             }
 
             // Calculate nondimensional production terms
-            Real shearProd  = dudz*dudz + dvdz*dvdz;
-            Real buoyProd   = -(CONST_GRAV/theta0) * dthetavdz; // no SGS clouds
-            Real Lsq        = Lm * Lm;
-            Real qsq        = qvel(i,j,k) * qvel(i,j,k);
-            Real GM         = Lsq/qsq * shearProd;
-            Real GH         = Lsq/qsq * buoyProd;
+            Real shearProd = dudz*dudz + dvdz*dvdz;
+            Real buoyProd  = -(CONST_GRAV/theta0) * dthetavdz; // no SGS clouds
+            Real Lsq       = Lm * Lm;
+            Real qsq       = qvel(i,j,k) * qvel(i,j,k);
+            Real GM        = Lsq/qsq * shearProd;
+            Real GH        = Lsq/qsq * buoyProd;
 
             // Equilibrium (Level-2) q calculation follows NN09, Appendix 2
-#if 0
-            Real Rf   = level2.calc_Rf(GM, GH);
-            Real SM2  = level2.calc_SM(Rf);
-            Real SH2  = level2.calc_SH(Rf);
-            Real q2sq = mynn.B1*Lm*Lm*SM2*(1.0-Rf)*shearProd;
-#endif
             Real SM2, SH2;
             level2.calc_SM_SH(SM2, SH2, GM, GH);
             Real q2sq = mynn.B1 * Lsq * (SM2*shearProd + SH2*buoyProd);
@@ -237,20 +231,18 @@ ComputeDiffusivityMYNN25 (const MultiFab& xvel,
                 //mynn.calc_stability_funcs(SM,SH,GM,GH,alphac);
 
                 // Apply limiter to level 2 functions as in original MYNN
-                // (following WRF)
+                // (following WRF), not to the level 2.5 functions
                 SM = SM2 * alphac;
                 SH = SH2 * alphac;
-
             } else {
                 // Level 2.5
                 mynn.calc_stability_funcs(SM,SH,GM,GH);
             }
-
             SQ = 3.0 * SM; // revised in NN09
 
             // Clip SM, SH following WRF
-            SM = amrex::min(amrex::max(SM,mynn.SMmin), mynn.SMmax);
-            SH = amrex::min(amrex::max(SH,mynn.SHmin), mynn.SHmax);
+            SM = amrex::min(amrex::max(SM, mynn.SMmin), mynn.SMmax);
+            SH = amrex::min(amrex::max(SH, mynn.SHmin), mynn.SHmax);
 
             // Finally, compute the eddy viscosity/diffusivities
             const Real rho = cell_data(i,j,k,Rho_comp);

@@ -33,11 +33,9 @@ struct TurbChoice {
         amrex::ParmParse pp(pp_prefix);
 
         // Which LES closure?
-        std::string les_type_string = "None";
         query_one_or_per_level(pp, "les_type", les_type, lev, max_level);
 
         // Which PBL Closure
-        static std::string pbl_type_string = "None";
         query_one_or_per_level(pp, "pbl_type", pbl_type, lev, max_level);
 
         // Do some more stuff for PBL Modeling

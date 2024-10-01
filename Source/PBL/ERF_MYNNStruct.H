@@ -90,7 +90,8 @@ struct MYNNLevel2 {
     {
         AMREX_ASSERT(initialized);
         amrex::Real Ri = -GH/(GM + eps);
-        return Ri1*(Ri + Ri2 - std::sqrt(Ri*Ri - Ri3*Ri + Ri2*Ri2));
+        amrex::Real Rf = Ri1*(Ri + Ri2 - std::sqrt(Ri*Ri - Ri3*Ri + Ri2*Ri2));
+        return amrex::min(Rf, Rfc); // following WRF mym_level2
     }
 
     AMREX_GPU_DEVICE

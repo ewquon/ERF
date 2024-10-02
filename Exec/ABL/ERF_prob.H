@@ -13,6 +13,7 @@ struct ProbParm : ProbParmDefaults {
   amrex::Real A_0   = 1.0;
   amrex::Real KE_0  = 0.1;
 
+  amrex::Real KE_min = 1e-13;
   amrex::Real KE_decay_height = -1;
   amrex::Real KE_decay_order  =  1;
 

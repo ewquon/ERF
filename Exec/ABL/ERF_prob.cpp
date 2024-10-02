@@ -17,6 +17,7 @@ Problem::Problem(const amrex::Real* problo, const amrex::Real* probhi)
   pp.query("T_0", parms.T_0);
   pp.query("A_0", parms.A_0);
   pp.query("KE_0", parms.KE_0);
+  pp.query("KE_min", parms.KE_min);
   pp.query("KE_decay_height", parms.KE_decay_height);
   pp.query("KE_decay_order", parms.KE_decay_order);
 
@@ -130,9 +131,10 @@ Problem::init_custom_pert(
         if (parms_d.KE_decay_height > 0) {
             // scale initial SGS kinetic energy with height
             state_pert(i, j, k, RhoKE_comp) *= max(
-                std::pow(1 - min(z/parms_d.KE_decay_height,1.0), parms_d.KE_decay_order),
-                1e-12);
+                std::pow(1.0 - min(z/parms_d.KE_decay_height,1.0), parms_d.KE_decay_order),
+                0.0);
         }
+        state_pert(i, j, k, RhoKE_comp) = max(state_pert(i, j, k, RhoKE_comp), r_hse(i,j,k)*parms_d.KE_min);
     }
     if (state_pert.nComp() > RhoQKE_comp) {
         // PBL
@@ -140,9 +142,10 @@ Problem::init_custom_pert(
         if (parms_d.KE_decay_height > 0) {
             // scale initial SGS kinetic energy with height
             state_pert(i, j, k, RhoQKE_comp) *= max(
-                std::pow(1 - min(z/parms_d.KE_decay_height,1.0), parms_d.KE_decay_order),
-                1e-12);
+                std::pow(1.0 - min(z/parms_d.KE_decay_height,1.0), parms_d.KE_decay_order),
+                0.0);
         }
+        state_pert(i, j, k, RhoQKE_comp) = max(state_pert(i, j, k, RhoQKE_comp), 2.0*r_hse(i,j,k)*parms_d.KE_min);
     }
 
     if (use_moisture) {

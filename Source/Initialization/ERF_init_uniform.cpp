@@ -18,7 +18,7 @@ ERF::init_uniform (int lev)
 {
     auto& lev_new = vars_new[lev];
     for (MFIter mfi(lev_new[Vars::cons], TilingIfNotGPU()); mfi.isValid(); ++mfi) {
-        const Box &gbx = mfi.growntilebox(1);
+        const Box &gbx = mfi.growntilebox();
         const auto &cons_arr = lev_new[Vars::cons].array(mfi);
         prob->init_uniform(gbx, cons_arr);
     }

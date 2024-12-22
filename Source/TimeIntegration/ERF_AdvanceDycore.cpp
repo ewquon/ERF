@@ -219,7 +219,8 @@ void ERF::advance_dycore(int level,
                                   fine_geom, *mapfac_u[level], *mapfac_v[level],
                                   z_phys_nd[level], solverChoice,
                                   m_most, z_0, exp_most,
-                                  l_use_moisture, level, bc_ptr_h);
+                                  l_use_moisture, level, bc_ptr_h,
+                                  thinbody);
     }
 
     // ***********************************************************************************************

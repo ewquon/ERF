@@ -5,6 +5,7 @@
 
 #include <ERF_ABLMost.H>
 #include <ERF_DataStruct.H>
+#include <ERF_ThinBodyStruct.H>
 #include <AMReX_BCRec.H>
 
 void
@@ -24,6 +25,7 @@ ComputeTurbulentViscosity (const amrex::MultiFab& xvel , const amrex::MultiFab& 
                            const bool& use_moisture,
                            int level,
                            const amrex::BCRec* bc_ptr,
+                           const ThinImmersedBody& thinbody,
                            bool vert_only = false);
 
 AMREX_GPU_DEVICE

@@ -37,7 +37,8 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                                    const MultiFab& mapfac_u, const MultiFab& mapfac_v,
                                    const std::unique_ptr<MultiFab>& z_phys_nd,
                                    const TurbChoice& turbChoice, const Real const_grav,
-                                   std::unique_ptr<ABLMost>& most, const bool& exp_most)
+                                   std::unique_ptr<ABLMost>& most, const bool& exp_most,
+                                   const ThinImmersedBody& thinbody)
 {
     const GpuArray<Real, AMREX_SPACEDIM> cellSizeInv = geom.InvCellSizeArray();
     const Box& domain = geom.Domain();
@@ -133,10 +134,36 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
         const Real l_C_k        = turbChoice.Ck;
         const Real l_C_e        = turbChoice.Ce;
         const Real l_C_e_wall   = turbChoice.Ce_wall;
-
+        const bool l_have_tb    = (thinbody)? true : false;
         const Real Ce_lcoeff    = amrex::max(0.0, l_C_e - 1.9*l_C_k);
         const Real l_abs_g      = const_grav;
         const Real l_inv_theta0 = 1.0 / turbChoice.theta_ref;
+
+        Gpu::DeviceVector<IntVect> tb_xfacelist, tb_yfacelist, tb_zfacelist;
+        if (thinbody) {
+            tb_xfacelist.resize(thinbody.zero_xflux.size());
+            tb_yfacelist.resize(thinbody.zero_yflux.size());
+            tb_zfacelist.resize(thinbody.zero_zflux.size());
+
+            if (tb_xfacelist.size() > 0) {
+                Gpu::copy(amrex::Gpu::hostToDevice,
+                          thinbody.zero_xflux.begin(),
+                          thinbody.zero_xflux.end(),
+                          tb_xfacelist.begin());
+            }
+            if (tb_yfacelist.size() > 0) {
+                Gpu::copy(amrex::Gpu::hostToDevice,
+                          thinbody.zero_yflux.begin(),
+                          thinbody.zero_yflux.end(),
+                          tb_yfacelist.begin());
+            }
+            if (tb_zfacelist.size() > 0) {
+                Gpu::copy(amrex::Gpu::hostToDevice,
+                          thinbody.zero_zflux.begin(),
+                          thinbody.zero_zflux.end(),
+                          tb_zfacelist.begin());
+            }
+        }
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -214,8 +241,25 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                 // Calculate SFS quantities
                 // - dissipation
                 Real Ce = 1.9*l_C_k + Ce_lcoeff*length / DeltaMsf;
-                if ((l_C_e_wall > 0) && (k==0)) {
-                    Ce = l_C_e_wall;
+                if (l_C_e_wall > 0) {
+                    // Assume ground is at zlo
+                    if (k==0) {
+                        Ce = l_C_e_wall;
+                    } else if (l_have_tb) {
+                        IntVect faceslo(i  ,j  ,k  );
+                        IntVect xfacehi(i+1,j  ,k  );
+                        IntVect yfacehi(i  ,j+1,k  );
+                        IntVect zfacehi(i  ,j  ,k+1);
+                        if( std::find(tb_xfacelist.begin(), tb_xfacelist.end(), faceslo) != tb_xfacelist.end() ||
+                            std::find(tb_yfacelist.begin(), tb_yfacelist.end(), faceslo) != tb_yfacelist.end() ||
+                            std::find(tb_zfacelist.begin(), tb_zfacelist.end(), faceslo) != tb_zfacelist.end() ||
+                            std::find(tb_xfacelist.begin(), tb_xfacelist.end(), xfacehi) != tb_xfacelist.end() ||
+                            std::find(tb_yfacelist.begin(), tb_yfacelist.end(), yfacehi) != tb_yfacelist.end() ||
+                            std::find(tb_zfacelist.begin(), tb_zfacelist.end(), zfacehi) != tb_zfacelist.end() )
+                        {
+                            Ce = l_C_e_wall;
+                        }
+                    }
                 }
                 diss(i,j,k) = cell_data(i,j,k,Rho_comp) * Ce * std::pow(E,1.5) / length;
 
@@ -797,6 +841,7 @@ void ComputeTurbulentViscosity (const MultiFab& xvel , const MultiFab& yvel ,
                                 const bool& use_moisture,
                                 int level,
                                 const BCRec* bc_ptr,
+                                const ThinImmersedBody& thinbody,
                                 bool vert_only)
 {
     BL_PROFILE_VAR("ComputeTurbulentViscosity()",ComputeTurbulentViscosity);
@@ -832,7 +877,8 @@ void ComputeTurbulentViscosity (const MultiFab& xvel , const MultiFab& yvel ,
                                      Hfx1, Hfx2, Hfx3, Diss,
                                      geom, mapfac_u, mapfac_v,
                                      z_phys_nd, turbChoice, const_grav,
-                                     most, exp_most);
+                                     most, exp_most,
+                                     thinbody);
     }
 
     if (turbChoice.rans_type != RANSType::None) {

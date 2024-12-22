@@ -296,14 +296,8 @@ ERF::ERF_shared ()
     mapfac_u.resize(nlevs_max);
     mapfac_v.resize(nlevs_max);
 
-    // Thin immersed body
-    xflux_imask.resize(nlevs_max);
-    yflux_imask.resize(nlevs_max);
-    zflux_imask.resize(nlevs_max);
-    //overset_imask.resize(nlevs_max);
-    thin_xforce.resize(nlevs_max);
-    thin_yforce.resize(nlevs_max);
-    thin_zforce.resize(nlevs_max);
+    // Thin immersed bodies
+    thinbody.resize_arrays(nlevs_max);
 
     // Base state
     base_state.resize(nlevs_max);
@@ -672,12 +666,12 @@ ERF::InitData_post ()
             AverageDown();
         }
 
-        if (solverChoice.advChoice.have_zero_flux_faces)
+        if (thinbody)
         {
             AMREX_ALWAYS_ASSERT_WITH_MESSAGE(finest_level == 0,
                 "Thin immersed body with refinement not currently supported.");
             if (SolverChoice::mesh_type != MeshType::ConstantDz) {
-                amrex::Print() << "NOTE: Thin immersed body with non-constant dz has not been tested." << std::endl;
+                Warning("NOTE: Thin immersed body with non-constant dz has not been tested");
             }
         }
 

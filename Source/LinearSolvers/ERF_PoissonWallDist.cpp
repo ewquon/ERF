@@ -97,34 +97,34 @@ void ERF::poisson_wall_dist (int lev)
     // ****************************************************************************
     // Overset mask is 0/1: 1 means the node is an unknown. 0 means it's known.
     mask.setVal(1);
-    if (solverChoice.advChoice.have_zero_flux_faces) {
+    if (thinbody) {
         Warning("Poisson distance is inaccurate for bodies in open domains that are small compared to the domain size, skipping");
         return;
 #if 0
         Gpu::DeviceVector<IntVect> xfacelist, yfacelist, zfacelist;
 
-        xfacelist.resize(solverChoice.advChoice.zero_xflux.size());
-        yfacelist.resize(solverChoice.advChoice.zero_yflux.size());
-        zfacelist.resize(solverChoice.advChoice.zero_zflux.size());
+        xfacelist.resize(thinbody.zero_xflux.size());
+        yfacelist.resize(thinbody.zero_yflux.size());
+        zfacelist.resize(thinbody.zero_zflux.size());
 
         if (xfacelist.size() > 0) {
             Gpu::copy(amrex::Gpu::hostToDevice,
-                      solverChoice.advChoice.zero_xflux.begin(),
-                      solverChoice.advChoice.zero_xflux.end(),
+                      thinbody.zero_xflux.begin(),
+                      thinbody.zero_xflux.end(),
                       xfacelist.begin());
             Print() << "  masking interior xfaces" << std::endl;
         }
         if (yfacelist.size() > 0) {
             Gpu::copy(amrex::Gpu::hostToDevice,
-                      solverChoice.advChoice.zero_yflux.begin(),
-                      solverChoice.advChoice.zero_yflux.end(),
+                      thinbody.zero_yflux.begin(),
+                      thinbody.zero_yflux.end(),
                       yfacelist.begin());
             Print() << "  masking interior yfaces" << std::endl;
         }
         if (zfacelist.size() > 0) {
             Gpu::copy(amrex::Gpu::hostToDevice,
-                      solverChoice.advChoice.zero_zflux.begin(),
-                      solverChoice.advChoice.zero_zflux.end(),
+                      thinbody.zero_zflux.begin(),
+                      thinbody.zero_zflux.end(),
                       zfacelist.begin());
             Print() << "  masking interior zfaces" << std::endl;
         }
@@ -206,7 +206,7 @@ void ERF::poisson_wall_dist (int lev)
     Print() << "  bc lo : " << bc3d_lo << std::endl;
     Print() << "  bc hi : " << bc3d_hi << std::endl;
 
-    if (!solverChoice.advChoice.have_zero_flux_faces && !havewall) {
+    if (!havewall && !thinbody) {
         Error("No solid boundaries in the computational domain");
     }
 

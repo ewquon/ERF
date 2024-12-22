@@ -47,6 +47,7 @@
 #include <ERF_SampleData.H>
 #include <ERF_ForestDrag.H>
 #include <ERF_TerrainDrag.H>
+#include <ERF_ThinBodyStruct.H>
 
 #ifdef ERF_USE_PARTICLES
 #include "ERF_ParticleData.H"
@@ -898,16 +899,8 @@ private:
     // These are the "physical" boundary condition types (e.g. "inflow")
     amrex::GpuArray<ERF_BC, AMREX_SPACEDIM*2> phys_bc_type;
 
-    // These are the masks for the thin immersed body
-    amrex::Vector<std::unique_ptr<amrex::iMultiFab>> xflux_imask;
-    amrex::Vector<std::unique_ptr<amrex::iMultiFab>> yflux_imask;
-    amrex::Vector<std::unique_ptr<amrex::iMultiFab>> zflux_imask;
-    //amrex::Vector<std::unique_ptr<amrex::iMultiFab>> overset_imask;
-
-    // These are the body forces that result from the thin immersed body
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> thin_xforce;
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> thin_yforce;
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> thin_zforce;
+    // Data container for thin immersed bodies
+    ThinImmersedBody thinbody;
 
     int last_plot_file_step_1;
     int last_plot_file_step_2;

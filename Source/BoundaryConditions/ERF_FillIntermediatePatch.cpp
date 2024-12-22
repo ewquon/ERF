@@ -72,14 +72,14 @@ ERF::FillIntermediatePatch (int lev, Real time,
     // Enforce no penetration for thin immersed body
     if (!cons_only) {
         // Enforce no penetration for thin immersed body
-        if (xflux_imask[lev]) {
-            ApplyMask(*mfs_mom[IntVars::xmom], *xflux_imask[lev]);
+        if (thinbody.xflux_imask[lev]) {
+            ApplyMask(*mfs_mom[IntVars::xmom], *thinbody.xflux_imask[lev]);
         }
-        if (yflux_imask[lev]) {
-            ApplyMask(*mfs_mom[IntVars::ymom], *yflux_imask[lev]);
+        if (thinbody.yflux_imask[lev]) {
+            ApplyMask(*mfs_mom[IntVars::ymom], *thinbody.yflux_imask[lev]);
         }
-        if (zflux_imask[lev]) {
-            ApplyMask(*mfs_mom[IntVars::zmom], *zflux_imask[lev]);
+        if (thinbody.zflux_imask[lev]) {
+            ApplyMask(*mfs_mom[IntVars::zmom], *thinbody.zflux_imask[lev]);
         }
     }
 

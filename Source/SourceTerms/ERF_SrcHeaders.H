@@ -5,6 +5,7 @@
 #include "ERF_DataStruct.H"
 #include "ERF_InputSoundingData.H"
 #include "ERF_TurbPertStruct.H"
+#include "ERF_ThinBodyStruct.H"
 
 #ifdef ERF_USE_EB
 #include <AMReX_EBMultiFabUtil.H>
@@ -73,15 +74,11 @@ void make_mom_sources (int level, int nrk,
                        InputSoundingData& input_sounding_data,
                        const int n_qstate);
 
-void add_thin_body_sources (amrex::MultiFab& xmom_source,
+void add_thin_body_sources (int level,
+                            amrex::MultiFab& xmom_source,
                             amrex::MultiFab& ymom_source,
                             amrex::MultiFab& zmom_source,
-                            std::unique_ptr<amrex::iMultiFab>& xflux_imask_lev,
-                            std::unique_ptr<amrex::iMultiFab>& yflux_imask_lev,
-                            std::unique_ptr<amrex::iMultiFab>& zflux_imask_lev,
-                            std::unique_ptr<amrex::MultiFab>& thin_xforce_lev,
-                            std::unique_ptr<amrex::MultiFab>& thin_yforce_lev,
-                            std::unique_ptr<amrex::MultiFab>& thin_zforce_lev);
+                            ThinImmersedBody& thinbody);
 
 #if defined(ERF_USE_NETCDF)
 void

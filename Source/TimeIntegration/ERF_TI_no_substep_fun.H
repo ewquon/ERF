@@ -167,10 +167,13 @@
                   fast_only=true, vel_and_mom_synced=false);
 
         if (solverChoice.anelastic[level]) {
-            bool have_tb = (thin_xforce[0] || thin_yforce[0] || thin_zforce[0]);
-            if (have_tb) {
+#if 0
+            if (thinbody) {
                 project_velocities_tb(level, slow_dt, S_sum, pp_inc[level]);
-            } else {
+            }
+            else
+#endif
+            {
                 project_velocities(level, slow_dt, S_sum, pp_inc[level]);
             }
         }

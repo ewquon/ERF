@@ -156,9 +156,7 @@
 #endif
                              fr_as_crse, fr_as_fine);
 
-            add_thin_body_sources(xmom_src, ymom_src, zmom_src,
-                                  xflux_imask[level], yflux_imask[level], zflux_imask[level],
-                                  thin_xforce[level], thin_yforce[level], thin_zforce[level]);
+            add_thin_body_sources(level, xmom_src, ymom_src, zmom_src, thinbody);
 
             // We define and evolve (rho theta)_0 in order to re-create p_0 in a way that is consistent
             //    with our update of (rho theta) but does NOT maintain dp_0 / dz = -rho_0 g.  This is why
@@ -265,9 +263,7 @@
 #endif
                              fr_as_crse, fr_as_fine);
 
-            add_thin_body_sources(xmom_src, ymom_src, zmom_src,
-                                  xflux_imask[level], yflux_imask[level], zflux_imask[level],
-                                  thin_xforce[level], thin_yforce[level], thin_zforce[level]);
+            add_thin_body_sources(level, xmom_src, ymom_src, zmom_src, thinbody);
         }
 
 #ifdef ERF_USE_NETCDF
@@ -478,9 +474,9 @@
 #endif
                          fr_as_crse, fr_as_fine);
 
-         add_thin_body_sources(xmom_src, ymom_src, zmom_src,
-                               xflux_imask[level], yflux_imask[level], zflux_imask[level],
-                               thin_xforce[level], thin_yforce[level], thin_zforce[level]);
+#if 0
+            add_thin_body_sources(level, xmom_src, ymom_src, zmom_src, thinbody);
+#endif
 
 #ifdef ERF_USE_NETCDF
         // Populate RHS for relaxation zones if using real bcs

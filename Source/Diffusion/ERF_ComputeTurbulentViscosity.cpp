@@ -133,6 +133,7 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
         const Real l_C_k        = turbChoice.Ck;
         const Real l_C_e        = turbChoice.Ce;
         const Real l_C_e_wall   = turbChoice.Ce_wall;
+
         const Real Ce_lcoeff    = amrex::max(0.0, l_C_e - 1.9*l_C_k);
         const Real l_abs_g      = const_grav;
         const Real l_inv_theta0 = 1.0 / turbChoice.theta_ref;
@@ -212,11 +213,9 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
 
                 // Calculate SFS quantities
                 // - dissipation
-                Real Ce;
+                Real Ce = 1.9*l_C_k + Ce_lcoeff*length / DeltaMsf;
                 if ((l_C_e_wall > 0) && (k==0)) {
                     Ce = l_C_e_wall;
-                } else {
-                    Ce = 1.9*l_C_k + Ce_lcoeff*length / DeltaMsf;
                 }
                 diss(i,j,k) = cell_data(i,j,k,Rho_comp) * Ce * std::pow(E,1.5) / length;
 

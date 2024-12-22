@@ -189,7 +189,6 @@ function(build_erf_lib erf_lib_name)
        ${SRC_DIR}/Utils/ERF_ChopGrids.cpp
        ${SRC_DIR}/Utils/ERF_MomentumToVelocity.cpp
        ${SRC_DIR}/LinearSolvers/ERF_PoissonSolve.cpp
-       ${SRC_DIR}/LinearSolvers/ERF_PoissonSolve_tb.cpp
        ${SRC_DIR}/LinearSolvers/ERF_PoissonWallDist.cpp
        ${SRC_DIR}/LinearSolvers/ERF_ComputeDivergence.cpp 
        ${SRC_DIR}/LinearSolvers/ERF_SolveWithGMRES.cpp

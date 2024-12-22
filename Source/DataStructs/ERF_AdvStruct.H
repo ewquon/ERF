@@ -180,11 +180,6 @@ struct AdvChoice {
         {
             moistscal_vert_adv_type = adv_type_convert_string_to_advtype(moistscal_vert_adv_string);
         }
-
-        pp.queryarr("zero_xflux_faces", zero_xflux);
-        pp.queryarr("zero_yflux_faces", zero_yflux);
-        pp.queryarr("zero_zflux_faces", zero_zflux);
-        have_zero_flux_faces = ((zero_xflux.size() > 0) || (zero_yflux.size() > 0) || (zero_zflux.size() > 0));
     }
 
     void display()
@@ -295,11 +290,5 @@ struct AdvChoice {
     amrex::Real dryscal_vert_upw_frac    = 1.0;
     amrex::Real moistscal_horiz_upw_frac = 1.0;
     amrex::Real moistscal_vert_upw_frac  = 1.0;
-
-    // Thin immersed bodies
-    amrex::Vector<amrex::IntVect> zero_xflux;
-    amrex::Vector<amrex::IntVect> zero_yflux;
-    amrex::Vector<amrex::IntVect> zero_zflux;
-    bool have_zero_flux_faces = false;
 };
 #endif

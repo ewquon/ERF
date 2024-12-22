@@ -522,6 +522,10 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
     // *******************************************************************************************
     thinbody.init_params();
 
+    if (solverChoice.anelastic[lev] && thinbody) {
+        Error("Thin immersed bodies and anelastic flow not currently supported");
+    }
+
 #if 0
     if ((thinbody.zero_xflux.size() > 0) ||
         (thinbody.zero_yflux.size() > 0) ||

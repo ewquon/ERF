@@ -103,11 +103,11 @@ struct TurbChoice {
         Pr_t_inv = amrex::Real(1.0) / Pr_t;
         Sc_t_inv = amrex::Real(1.0) / Sc_t;
 
-        query_one_or_per_level(pp, "Ce"      , Ce, lev, max_level);
-        query_one_or_per_level(pp, "Ce_wall" , Ce_wall, lev, max_level);
-
         if (les_type == LESType::Deardorff) {
-            query_one_or_per_level(pp, "Ck" , Ck, lev, max_level);
+            query_one_or_per_level(pp, "Ck"      , Ck     , lev, max_level);
+            query_one_or_per_level(pp, "Ck_wall" , Ck_wall, lev, max_level);
+            query_one_or_per_level(pp, "Ce"      , Ce     , lev, max_level);
+            query_one_or_per_level(pp, "Ce_wall" , Ce_wall, lev, max_level);
         }
 
         // k-eqn constants
@@ -155,10 +155,12 @@ struct TurbChoice {
                 amrex::Print() << "    Sc_t                    : " << Sc_t << std::endl;
             }
             if (les_type == LESType::Deardorff) {
+                amrex::Print() << "    Ck                      : " << Ck << std::endl;
+                if (Ck_wall >= 0)
+                    amrex::Print() << "    Ck at wall              : " << Ck_wall << std::endl;
                 amrex::Print() << "    Ce                      : " << Ce << std::endl;
                 if (Ce_wall >= 0)
                     amrex::Print() << "    Ce at wall              : " << Ce_wall << std::endl;
-                amrex::Print() << "    Ck                      : " << Ck << std::endl;
             }
             amrex::Print() << "    sigma_k                 : " << sigma_k << std::endl;
             amrex::Print() << "    reference theta         : " << theta_ref << std::endl;
@@ -211,11 +213,13 @@ struct TurbChoice {
     amrex::Real Sc_t = 1.0;
     amrex::Real Sc_t_inv = 1.0;
 
+    // Deardorff Ck coefficient
+    amrex::Real Ck = 0.1;
+    amrex::Real Ck_wall = -1; // if >= 0, then set Ck to this at k=0
+
     // Deardorff Ce coefficient
     amrex::Real Ce = 0.93;
     amrex::Real Ce_wall = -1; // if >= 0, then set Ce to this at k=0
-    // Deardorff Ck coefficient
-    amrex::Real Ck = 0.1;
 
     // k-eqn RANS coefficients (Axell & Liungman 2001)
     amrex::Real Cmu0 = 0.5562;

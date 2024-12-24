@@ -156,7 +156,8 @@ struct TurbChoice {
             }
             if (les_type == LESType::Deardorff) {
                 amrex::Print() << "    Ce                      : " << Ce << std::endl;
-                amrex::Print() << "    Ce at wall              : " << Ce_wall << std::endl;
+                if (Ce_wall >= 0)
+                    amrex::Print() << "    Ce at wall              : " << Ce_wall << std::endl;
                 amrex::Print() << "    Ck                      : " << Ck << std::endl;
             }
             amrex::Print() << "    sigma_k                 : " << sigma_k << std::endl;
@@ -212,7 +213,7 @@ struct TurbChoice {
 
     // Deardorff Ce coefficient
     amrex::Real Ce = 0.93;
-    amrex::Real Ce_wall = 0.0; // if > 0, then set Ce to this at k=0
+    amrex::Real Ce_wall = -1; // if >= 0, then set Ce to this at k=0
     // Deardorff Ck coefficient
     amrex::Real Ck = 0.1;
 

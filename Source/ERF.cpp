@@ -641,7 +641,7 @@ ERF::InitData_pre ()
         }
 
         if ( (solverChoice.turbChoice[lev].les_type == LESType::Deardorff) &&
-             (solverChoice.turbChoice[lev].Ce_wall > 0) &&
+             (solverChoice.turbChoice[lev].Ce_wall >= 0) &&
              (phys_bc_type[Orientation(Direction::z,Orientation::low)] != ERF_BC::MOST) &&
              (phys_bc_type[Orientation(Direction::z,Orientation::low)] != ERF_BC::slip_wall) &&
              (phys_bc_type[Orientation(Direction::z,Orientation::low)] != ERF_BC::no_slip_wall) ) {

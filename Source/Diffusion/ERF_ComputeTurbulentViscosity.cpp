@@ -251,7 +251,7 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                 // Calculate SFS quantities
                 // - dissipation
                 Real Ce = 1.9*l_C_k + Ce_lcoeff*length / DeltaMsf;
-                if (l_C_e_wall > 0) {
+                if (l_C_e_wall >= 0) {
                     if (l_have_wall && (k==0)) {
                         // Assume ground is at zlo
                         Ce = l_C_e_wall;

@@ -6,6 +6,7 @@
 #include <ERF_PBLModels.H>
 #include <ERF_TileNoZ.H>
 #include <ERF_TerrainMetrics.H>
+#include <ERF_IndexDefines.H>
 
 using namespace amrex;
 
@@ -38,7 +39,7 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                                    const std::unique_ptr<MultiFab>& z_phys_nd,
                                    const TurbChoice& turbChoice, const Real const_grav,
                                    std::unique_ptr<ABLMost>& most, const bool& exp_most,
-                                   const ThinImmersedBody& thinbody)
+                                   const BCRec* bc_ptr, const ThinImmersedBody& thinbody)
 {
     const GpuArray<Real, AMREX_SPACEDIM> cellSizeInv = geom.InvCellSizeArray();
     const Box& domain = geom.Domain();
@@ -134,7 +135,16 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
         const Real l_C_k        = turbChoice.Ck;
         const Real l_C_e        = turbChoice.Ce;
         const Real l_C_e_wall   = turbChoice.Ce_wall;
+
+        // C_e_wall may be applied to either walls (MOST or no slip, assumed to
+        // lie on the zlo boundary) or thin immersed bodies; note that slip
+        // walls (foextrap/ext_dir in horizontal/vertical directions) do _not_
+        // apply
+        const bool l_have_wall  = ( (bc_ptr[BCVars::zvel_bc].lo(0) != ERFBCType::foextrap) &&
+                                    (bc_ptr[BCVars::zvel_bc].lo(1) != ERFBCType::foextrap) &&
+                                    (bc_ptr[BCVars::zvel_bc].lo(2) == ERFBCType::ext_dir) );
         const bool l_have_tb    = (thinbody)? true : false;
+
         const Real Ce_lcoeff    = amrex::max(0.0, l_C_e - 1.9*l_C_k);
         const Real l_abs_g      = const_grav;
         const Real l_inv_theta0 = 1.0 / turbChoice.theta_ref;
@@ -242,10 +252,11 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                 // - dissipation
                 Real Ce = 1.9*l_C_k + Ce_lcoeff*length / DeltaMsf;
                 if (l_C_e_wall > 0) {
-                    // Assume ground is at zlo
-                    if (k==0) {
+                    if (l_have_wall && (k==0)) {
+                        // Assume ground is at zlo
                         Ce = l_C_e_wall;
                     } else if (l_have_tb) {
+                        // Check adjacent faces relative to cell indices
                         IntVect faceslo(i  ,j  ,k  );
                         IntVect xfacehi(i+1,j  ,k  );
                         IntVect yfacehi(i  ,j+1,k  );
@@ -878,7 +889,7 @@ void ComputeTurbulentViscosity (const MultiFab& xvel , const MultiFab& yvel ,
                                      geom, mapfac_u, mapfac_v,
                                      z_phys_nd, turbChoice, const_grav,
                                      most, exp_most,
-                                     thinbody);
+                                     bc_ptr, thinbody);
     }
 
     if (turbChoice.rans_type != RANSType::None) {

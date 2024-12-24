@@ -7,6 +7,7 @@
 #include <ERF_TileNoZ.H>
 #include <ERF_TerrainMetrics.H>
 #include <ERF_IndexDefines.H>
+#include <ERF_ThinBodyUtils.H>
 
 using namespace amrex;
 
@@ -247,17 +248,7 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                         // Assume ground is at zlo
                         Ck = l_C_k_wall;
                     } else if (l_have_tb) {
-                        // Check adjacent faces relative to cell indices
-                        IntVect faceslo(i  ,j  ,k  );
-                        IntVect xfacehi(i+1,j  ,k  );
-                        IntVect yfacehi(i  ,j+1,k  );
-                        IntVect zfacehi(i  ,j  ,k+1);
-                        if( std::find(tb_xfacelist.begin(), tb_xfacelist.end(), faceslo) != tb_xfacelist.end() ||
-                            std::find(tb_yfacelist.begin(), tb_yfacelist.end(), faceslo) != tb_yfacelist.end() ||
-                            std::find(tb_zfacelist.begin(), tb_zfacelist.end(), faceslo) != tb_zfacelist.end() ||
-                            std::find(tb_xfacelist.begin(), tb_xfacelist.end(), xfacehi) != tb_xfacelist.end() ||
-                            std::find(tb_yfacelist.begin(), tb_yfacelist.end(), yfacehi) != tb_yfacelist.end() ||
-                            std::find(tb_zfacelist.begin(), tb_zfacelist.end(), zfacehi) != tb_zfacelist.end() )
+                        if (is_touching_thin_body(i,j,k, tb_xfacelist, tb_yfacelist, tb_zfacelist))
                         {
                             Ck = l_C_k_wall;
                         }
@@ -281,17 +272,7 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                         // Assume ground is at zlo
                         Ce = l_C_e_wall;
                     } else if (l_have_tb) {
-                        // Check adjacent faces relative to cell indices
-                        IntVect faceslo(i  ,j  ,k  );
-                        IntVect xfacehi(i+1,j  ,k  );
-                        IntVect yfacehi(i  ,j+1,k  );
-                        IntVect zfacehi(i  ,j  ,k+1);
-                        if( std::find(tb_xfacelist.begin(), tb_xfacelist.end(), faceslo) != tb_xfacelist.end() ||
-                            std::find(tb_yfacelist.begin(), tb_yfacelist.end(), faceslo) != tb_yfacelist.end() ||
-                            std::find(tb_zfacelist.begin(), tb_zfacelist.end(), faceslo) != tb_zfacelist.end() ||
-                            std::find(tb_xfacelist.begin(), tb_xfacelist.end(), xfacehi) != tb_xfacelist.end() ||
-                            std::find(tb_yfacelist.begin(), tb_yfacelist.end(), yfacehi) != tb_yfacelist.end() ||
-                            std::find(tb_zfacelist.begin(), tb_zfacelist.end(), zfacehi) != tb_zfacelist.end() )
+                        if (is_touching_thin_body(i,j,k, tb_xfacelist, tb_yfacelist, tb_zfacelist))
                         {
                             Ce = l_C_e_wall;
                         }

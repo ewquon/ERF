@@ -54,5 +54,4 @@ struct ThinImmersedBody {
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> fy;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> fz;
 };
-
 #endif

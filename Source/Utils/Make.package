@@ -16,6 +16,8 @@ CEXE_headers += ERF_Sat_methods.H
 CEXE_headers += ERF_WaterVaporSaturation.H
 CEXE_headers += ERF_DirectionSelector.H
 
+CEXE_headers += ERF_ThinBodyUtils.H
+
 CEXE_sources += ERF_AverageDown.cpp
 CEXE_sources += ERF_ChopGrids.cpp
 CEXE_sources += ERF_MomentumToVelocity.cpp

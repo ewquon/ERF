@@ -152,28 +152,23 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
         const Real l_inv_theta0 = 1.0 / turbChoice.theta_ref;
 
         Gpu::DeviceVector<IntVect> tb_xfacelist, tb_yfacelist, tb_zfacelist;
-        if (thinbody) {
-            tb_xfacelist.resize(thinbody.zero_xflux.size());
-            tb_yfacelist.resize(thinbody.zero_yflux.size());
-            tb_zfacelist.resize(thinbody.zero_zflux.size());
-
-            if (tb_xfacelist.size() > 0) {
-                Gpu::copy(amrex::Gpu::hostToDevice,
-                          thinbody.zero_xflux.begin(),
-                          thinbody.zero_xflux.end(),
-                          tb_xfacelist.begin());
-            }
-            if (tb_yfacelist.size() > 0) {
-                Gpu::copy(amrex::Gpu::hostToDevice,
-                          thinbody.zero_yflux.begin(),
-                          thinbody.zero_yflux.end(),
-                          tb_yfacelist.begin());
-            }
-            if (tb_zfacelist.size() > 0) {
-                Gpu::copy(amrex::Gpu::hostToDevice,
-                          thinbody.zero_zflux.begin(),
-                          thinbody.zero_zflux.end(),
-                          tb_zfacelist.begin());
+        if (thinbody && ((l_C_k_wall >= 0) ||
+                         (l_C_e_wall >= 0) ) )
+        {
+            // build vectors of face indices, used if Ck_wall or Ce_wall are
+            // specified
+            if (thinbody.extend_faces) {
+                // include adjoining cells by using extended face lists
+                thin_body_faces_to_vec(tb_xfacelist, tb_yfacelist, tb_zfacelist,
+                                       thinbody.extended_xfaces,
+                                       thinbody.extended_yfaces,
+                                       thinbody.extended_zfaces);
+            } else {
+                // use input face list
+                thin_body_faces_to_vec(tb_xfacelist, tb_yfacelist, tb_zfacelist,
+                                       thinbody.zero_xflux,
+                                       thinbody.zero_yflux,
+                                       thinbody.zero_zflux);
             }
         }
 

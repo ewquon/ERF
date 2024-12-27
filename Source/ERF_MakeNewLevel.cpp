@@ -526,6 +526,12 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
         Error("Thin immersed bodies and anelastic flow not currently supported");
     }
 
+    // Create extended lists of faces to be used when searching for cells
+    // that directly touch or adjoin a thin body face
+    if (thinbody && thinbody.extend_faces) {
+        thinbody.create_extended_sets(Geom(0).Domain());
+    }
+
 #if 0
     if ((thinbody.zero_xflux.size() > 0) ||
         (thinbody.zero_yflux.size() > 0) ||

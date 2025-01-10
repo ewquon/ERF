@@ -134,7 +134,6 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
     else if (turbChoice.les_type == LESType::Deardorff)
     {
         const Real l_C_k        = turbChoice.Ck;
-        const Real l_C_k_wall   = turbChoice.Ck_wall;
         const Real l_C_e        = turbChoice.Ce;
         const Real l_C_e_wall   = turbChoice.Ce_wall;
 
@@ -152,11 +151,9 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
         const Real l_inv_theta0 = 1.0 / turbChoice.theta_ref;
 
         Gpu::DeviceVector<IntVect> tb_xfacelist, tb_yfacelist, tb_zfacelist;
-        if (thinbody && ((l_C_k_wall >= 0) ||
-                         (l_C_e_wall >= 0) ) )
+        if (thinbody && (l_C_e_wall >= 0))
         {
-            // build vectors of face indices, used if Ck_wall or Ce_wall are
-            // specified
+            // build vectors of face indices, used if Ce_wall is specified
             if (thinbody.extend_faces) {
                 // include adjoining cells by using extended face lists
                 thin_body_faces_to_vec(tb_xfacelist, tb_yfacelist, tb_zfacelist,
@@ -236,23 +233,9 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
                     length = amrex::max(length, 0.001 * DeltaMsf);
                 }
 
-                // Allow different wall C_k
-                Real Ck = l_C_k;
-                if (l_C_k_wall >= 0) {
-                    if (l_have_wall && (k==0)) {
-                        // Assume ground is at zlo
-                        Ck = l_C_k_wall;
-                    } else if (l_have_tb) {
-                        if (is_touching_thin_body(i,j,k, tb_xfacelist, tb_yfacelist, tb_zfacelist))
-                        {
-                            Ck = l_C_k_wall;
-                        }
-                    }
-                }
-
                 // Calculate eddy diffusivities
                 // K = rho * C_k * l * KE^(1/2)
-                mu_turb(i,j,k,EddyDiff::Mom_h) = cell_data(i,j,k,Rho_comp) * Ck * length * std::sqrt(E);
+                mu_turb(i,j,k,EddyDiff::Mom_h) = cell_data(i,j,k,Rho_comp) * l_C_k * length * std::sqrt(E);
                 mu_turb(i,j,k,EddyDiff::Mom_v) = mu_turb(i,j,k,EddyDiff::Mom_h);
                 // KH = (1 + 2*l/delta) * mu_turb
                 mu_turb(i,j,k,EddyDiff::Theta_v) = (1.+2.*length/DeltaMsf) * mu_turb(i,j,k,EddyDiff::Mom_v);
@@ -261,7 +244,7 @@ void ComputeTurbulentViscosityLES (const MultiFab& Tau11, const MultiFab& Tau22,
 
                 // Calculate SFS quantities
                 // - dissipation
-                Real Ce = 1.9*Ck + Ce_lcoeff*length / DeltaMsf;
+                Real Ce = 1.9*l_C_k + Ce_lcoeff*length / DeltaMsf;
                 if (l_C_e_wall >= 0) {
                     if (l_have_wall && (k==0)) {
                         // Assume ground is at zlo

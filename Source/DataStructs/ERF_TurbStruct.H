@@ -105,7 +105,6 @@ struct TurbChoice {
 
         if (les_type == LESType::Deardorff) {
             query_one_or_per_level(pp, "Ck"      , Ck     , lev, max_level);
-            query_one_or_per_level(pp, "Ck_wall" , Ck_wall, lev, max_level);
             query_one_or_per_level(pp, "Ce"      , Ce     , lev, max_level);
             query_one_or_per_level(pp, "Ce_wall" , Ce_wall, lev, max_level);
         }
@@ -156,8 +155,6 @@ struct TurbChoice {
             }
             if (les_type == LESType::Deardorff) {
                 amrex::Print() << "    Ck                      : " << Ck << std::endl;
-                if (Ck_wall >= 0)
-                    amrex::Print() << "    Ck at wall              : " << Ck_wall << std::endl;
                 amrex::Print() << "    Ce                      : " << Ce << std::endl;
                 if (Ce_wall >= 0)
                     amrex::Print() << "    Ce at wall              : " << Ce_wall << std::endl;
@@ -215,7 +212,6 @@ struct TurbChoice {
 
     // Deardorff Ck coefficient
     amrex::Real Ck = 0.1;
-    amrex::Real Ck_wall = -1; // if >= 0, then set Ck to this at k=0
 
     // Deardorff Ce coefficient
     amrex::Real Ce = 0.93;

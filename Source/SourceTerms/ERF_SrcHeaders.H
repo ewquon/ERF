@@ -2,14 +2,12 @@
 #define ERF_INTEGRATION_H_
 
 #include <AMReX_MultiFab.H>
+#include <AMReX_EBMultiFabUtil.H>
+
 #include "ERF_DataStruct.H"
 #include "ERF_InputSoundingData.H"
 #include "ERF_TurbPertStruct.H"
 #include "ERF_ThinBodyStruct.H"
-
-#ifdef ERF_USE_EB
-#include <AMReX_EBMultiFabUtil.H>
-#endif
 
 /**
  * Function for computing the buoyancy term to be used in the evolution

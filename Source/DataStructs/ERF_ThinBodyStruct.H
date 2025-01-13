@@ -19,6 +19,10 @@ struct ThinImmersedBody {
         pp.queryarr("zero_flux_zfaces", zero_zflux);
         pp.query("extend_tb_faces", extend_faces);
 
+        xfacelist_d.resize(zero_xflux.size());
+        yfacelist_d.resize(zero_yflux.size());
+        zfacelist_d.resize(zero_zflux.size());
+
         have_zero_flux_faces = ((zero_xflux.size() > 0) || (zero_yflux.size() > 0) || (zero_zflux.size() > 0));
     }
 
@@ -100,6 +104,10 @@ struct ThinImmersedBody {
     std::set<amrex::IntVect> extended_xfaces;
     std::set<amrex::IntVect> extended_yfaces;
     std::set<amrex::IntVect> extended_zfaces;
+
+    amrex::Gpu::DeviceVector<amrex::IntVect> xfacelist_d;
+    amrex::Gpu::DeviceVector<amrex::IntVect> yfacelist_d;
+    amrex::Gpu::DeviceVector<amrex::IntVect> zfacelist_d;
 
     // Masks used to zero the flux on selected faces
     amrex::Vector<std::unique_ptr<amrex::iMultiFab>> xflux_imask;

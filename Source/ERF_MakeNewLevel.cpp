@@ -527,13 +527,15 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
     // *******************************************************************************************
     thinbody.init_params();
 
-    if (solverChoice.anelastic[lev] && thinbody) {
+    if (!thinbody) return;
+
+    if (solverChoice.anelastic[lev]) {
         Error("Thin immersed bodies and anelastic flow not currently supported");
     }
 
     // Create extended lists of faces to be used when searching for cells
     // that directly touch or adjoin a thin body face
-    if (thinbody && thinbody.extend_faces) {
+    if (thinbody.extend_faces) {
         thinbody.create_extended_sets(Geom(0).Domain());
     }
 
@@ -550,12 +552,16 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
     if (thinbody.zero_xflux.size() > 0) {
         amrex::Print() << "Setting up thin immersed body for "
             << thinbody.zero_xflux.size() << " xfaces" << std::endl;
+
         BoxArray ba_xf(ba);
         ba_xf.surroundingNodes(0);
+
         thinbody.fx[lev] = std::make_unique<MultiFab>(ba_xf,dm,1,0);
         thinbody.fx[lev]->setVal(0.0);
+
         thinbody.xflux_imask[lev] = std::make_unique<iMultiFab>(ba_xf,dm,1,0);
         thinbody.xflux_imask[lev]->setVal(1);
+
         for ( MFIter mfi(*thinbody.xflux_imask[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi )
         {
             Array4<int> const& imask_arr = thinbody.xflux_imask[lev]->array(mfi);
@@ -574,6 +580,22 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
                 }
             }
         }
+
+        if (thinbody.extend_faces) {
+            // convert set to vector
+            amrex::Vector<amrex::IntVect> tmp(thinbody.extended_xfaces.begin(),
+                                              thinbody.extended_xfaces.end());
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             tmp.begin(),
+                             tmp.end(),
+                             thinbody.xfacelist_d.begin());
+        } else {
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             thinbody.zero_xflux.begin(),
+                             thinbody.zero_xflux.end(),
+                             thinbody.xfacelist_d.begin());
+        }
+
     } else {
         thinbody.fx[lev] = nullptr;
         thinbody.xflux_imask[lev] = nullptr;
@@ -582,12 +604,16 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
     if (thinbody.zero_yflux.size() > 0) {
         amrex::Print() << "Setting up thin immersed body for "
             << thinbody.zero_yflux.size() << " yfaces" << std::endl;
+
         BoxArray ba_yf(ba);
         ba_yf.surroundingNodes(1);
+
         thinbody.fy[lev] = std::make_unique<MultiFab>(ba_yf,dm,1,0);
         thinbody.fy[lev]->setVal(0.0);
+
         thinbody.yflux_imask[lev] = std::make_unique<iMultiFab>(ba_yf,dm,1,0);
         thinbody.yflux_imask[lev]->setVal(1);
+
         for ( MFIter mfi(*thinbody.yflux_imask[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi )
         {
             Array4<int> const& imask_arr = thinbody.yflux_imask[lev]->array(mfi);
@@ -606,6 +632,22 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
                 }
             }
         }
+
+        if (thinbody.extend_faces) {
+            // convert set to vector
+            amrex::Vector<amrex::IntVect> tmp(thinbody.extended_yfaces.begin(),
+                                              thinbody.extended_yfaces.end());
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             tmp.begin(),
+                             tmp.end(),
+                             thinbody.yfacelist_d.begin());
+        } else {
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             thinbody.zero_yflux.begin(),
+                             thinbody.zero_yflux.end(),
+                             thinbody.yfacelist_d.begin());
+        }
+
     } else {
         thinbody.fy[lev] = nullptr;
         thinbody.yflux_imask[lev] = nullptr;
@@ -614,12 +656,16 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
     if (thinbody.zero_zflux.size() > 0) {
         amrex::Print() << "Setting up thin immersed body for "
             << thinbody.zero_zflux.size() << " zfaces" << std::endl;
+
         BoxArray ba_zf(ba);
         ba_zf.surroundingNodes(2);
+
         thinbody.fz[lev] = std::make_unique<MultiFab>(ba_zf,dm,1,0);
         thinbody.fz[lev]->setVal(0.0);
+
         thinbody.zflux_imask[lev] = std::make_unique<iMultiFab>(ba_zf,dm,1,0);
         thinbody.zflux_imask[lev]->setVal(1);
+
         for ( MFIter mfi(*thinbody.zflux_imask[lev], TilingIfNotGPU()); mfi.isValid(); ++mfi )
         {
             Array4<int> const& imask_arr = thinbody.zflux_imask[lev]->array(mfi);
@@ -638,6 +684,22 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
                 }
             }
         }
+
+        if (thinbody.extend_faces) {
+            // convert set to vector
+            amrex::Vector<amrex::IntVect> tmp(thinbody.extended_zfaces.begin(),
+                                              thinbody.extended_zfaces.end());
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             tmp.begin(),
+                             tmp.end(),
+                             thinbody.zfacelist_d.begin());
+        } else {
+            amrex::Gpu::copy(amrex::Gpu::hostToDevice,
+                             thinbody.zero_zflux.begin(),
+                             thinbody.zero_zflux.end(),
+                             thinbody.zfacelist_d.begin());
+        }
+
     } else {
         thinbody.fz[lev] = nullptr;
         thinbody.zflux_imask[lev] = nullptr;

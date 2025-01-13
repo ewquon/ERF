@@ -111,6 +111,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
                        std::unique_ptr<MultiFab>& mapfac_u,
                        std::unique_ptr<MultiFab>& mapfac_v,
                        EBFArrayBoxFactory const& ebfact,
+                       const ThinImmersedBody& thinbody,
                        YAFluxRegister* fr_as_crse,
                        YAFluxRegister* fr_as_fine)
 {
@@ -193,7 +194,7 @@ void erf_slow_rhs_pre (int level, int finest_level,
                            Tau11,Tau22,Tau33,Tau12,Tau13,Tau21,Tau23,Tau31,Tau32,
                            Tau12_op,Tau13_op,Tau23_op,
                            SmnSmn,eddyDiffs,geom,solverChoice,most,
-                           detJ,mapfac_m,mapfac_u,mapfac_v);
+                           detJ,mapfac_m,mapfac_u,mapfac_v,thinbody);
 
         dflux_x = std::make_unique<MultiFab>(convert(ba,IntVect(1,0,0)), dm, nvars, 0);
         dflux_y = std::make_unique<MultiFab>(convert(ba,IntVect(0,1,0)), dm, nvars, 0);

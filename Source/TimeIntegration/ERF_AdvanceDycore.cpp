@@ -182,7 +182,8 @@ void ERF::advance_dycore(int level,
                                 tau12, tau13, tau23,
                                 tau12_op, tau13_op, tau23_op,
                                 bc_ptr_h, dxInv,
-                                mf_m, mf_u, mf_v);
+                                mf_m, mf_u, mf_v,
+                                thinbody);
             }
         } // mfi
     } // l_use_diff

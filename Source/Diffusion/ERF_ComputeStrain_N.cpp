@@ -23,6 +23,7 @@ using namespace amrex;
  * @param[in] mf_m map factor at cell center
  * @param[in] mf_u map factor at x-face
  * @param[in] mf_v map factor at y-face
+ * @param[in] thinbody container with specified zero-flux faces
  */
 void
 ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
@@ -31,7 +32,8 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
                  Array4<Real>& tau12, Array4<Real>& tau13, Array4<Real>& tau23,
                  Array4<Real>& tau12_op, Array4<Real>& tau13_op, Array4<Real>& tau23_op,
                  const BCRec* bc_ptr, const GpuArray<Real, AMREX_SPACEDIM>& dxInv,
-                 const Array4<const Real>& mf_m, const Array4<const Real>& mf_u, const Array4<const Real>& mf_v)
+                 const Array4<const Real>& mf_m, const Array4<const Real>& mf_u, const Array4<const Real>& mf_v,
+                 const ThinImmersedBody& thinbody)
 {
     // Convert domain to each index type to test if we are on dirichlet boundary
     Box domain_xy = convert(domain, tbxxy.ixType());
@@ -219,6 +221,12 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
         tau12(i,j,k) = 0.5 * ( (u(i, j, k)/mf_u(i,j,0) - u(i, j-1, k)/mf_u(i,j-1,0))*dxInv[1] +
                                (v(i, j, k)/mf_v(i,j,0) - v(i-1, j, k)/mf_v(i-1,j,0))*dxInv[0] ) * mf_u(i,j,0)*mf_u(i,j,0);
+        if ((i==125) && (j==125)) {
+            AllPrint() << "S12" << IntVect(i,j,k) << " = " << tau12(i,j,k)
+                << " u(j-1) = " << u(i,j-1,k)
+                << " u(j) = " << u(i,j,k)
+                << std::endl;
+        }
     },
     [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
         tau13(i,j,k) = 0.5 * ( (u(i, j, k) - u(i, j, k-1))*dxInv[2] + (w(i, j, k) - w(i-1, j, k))*dxInv[0]*mf_u(i,j,0) );
@@ -227,4 +235,6 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
         tau23(i,j,k) = 0.5 * ( (v(i, j, k) - v(i, j, k-1))*dxInv[2] + (w(i, j, k) - w(i, j-1, k))*dxInv[1]*mf_v(i,j,0) );
     });
 
+    // Update shear strains if we have thin bodies
+    //***********************************************************************************
 }

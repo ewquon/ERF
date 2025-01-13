@@ -28,7 +28,8 @@ void erf_make_tau_terms (int level, int nrk,
                          std::unique_ptr<MultiFab>& detJ,
                          std::unique_ptr<MultiFab>& mapfac_m,
                          std::unique_ptr<MultiFab>& mapfac_u,
-                         std::unique_ptr<MultiFab>& mapfac_v)
+                         std::unique_ptr<MultiFab>& mapfac_v,
+                         const ThinImmersedBody& thinbody)
 {
     BL_PROFILE_REGION("erf_make_tau_terms()");
 
@@ -363,7 +364,8 @@ void erf_make_tau_terms (int level, int nrk,
                                 s12, s13, s23,
                                 s12_op, s13_op, s23_op,
                                 bc_ptr_h, dxInv,
-                                mf_m, mf_u, mf_v);
+                                mf_m, mf_u, mf_v,
+                                thinbody);
                 } // end profile
 
                 // Populate SmnSmn if using Deardorff or k-eqn RANS (used as diff src in post)

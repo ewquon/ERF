@@ -45,7 +45,8 @@ void erf_make_tau_terms (int level, int nrk,
                          std::unique_ptr<amrex::MultiFab>& dJ,
                          std::unique_ptr<amrex::MultiFab>& mapfac_m,
                          std::unique_ptr<amrex::MultiFab>& mapfac_u,
-                         std::unique_ptr<amrex::MultiFab>& mapfac_v);
+                         std::unique_ptr<amrex::MultiFab>& mapfac_v,
+                         const ThinImmersedBody& thinbody);
 
 /**
  * Function for computing the slow RHS for the evolution equations for the density, potential temperature and momentum.
@@ -105,6 +106,7 @@ void erf_slow_rhs_pre (int level, int finest_level, int nrk,
                       std::unique_ptr<amrex::MultiFab>& mapfac_u,
                       std::unique_ptr<amrex::MultiFab>& mapfac_v,
                       amrex::EBFArrayBoxFactory const& ebfact,
+                      const ThinImmersedBody& thinbody,
                       amrex::YAFluxRegister* fr_as_crse,
                       amrex::YAFluxRegister* fr_as_fine);
 

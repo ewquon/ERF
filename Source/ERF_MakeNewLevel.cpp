@@ -530,7 +530,11 @@ ERF::init_thin_body (int lev, const BoxArray& ba, const DistributionMapping& dm)
     if (!thinbody) return;
 
     if (solverChoice.anelastic[lev]) {
-        Error("Thin immersed bodies and anelastic flow not currently supported");
+        Error("Thin immersed bodies in anelastic flow not currently supported");
+    }
+
+    if (solverChoice.terrain_type != TerrainType::None) {
+        Error("Thin immersed bodies with terrain not currently supported");
     }
 
     // Create extended lists of faces to be used when searching for cells

@@ -29,6 +29,7 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
                  const Array4<const Real>& u, const Array4<const Real>& v, const Array4<const Real>& w,
                  Array4<Real>& tau11, Array4<Real>& tau22, Array4<Real>& tau33,
                  Array4<Real>& tau12, Array4<Real>& tau13, Array4<Real>& tau23,
+                 Array4<Real>& tau12_op, Array4<Real>& tau13_op, Array4<Real>& tau23_op,
                  const BCRec* bc_ptr, const GpuArray<Real, AMREX_SPACEDIM>& dxInv,
                  const Array4<const Real>& mf_m, const Array4<const Real>& mf_u, const Array4<const Real>& mf_v)
 {

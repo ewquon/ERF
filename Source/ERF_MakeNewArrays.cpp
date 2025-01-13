@@ -416,6 +416,21 @@ ERF::update_diffusive_arrays (int lev, const BoxArray& ba, const DistributionMap
             Tau31_lev[lev] = nullptr;
             Tau32_lev[lev] = nullptr;
         }
+        if ((thinbody.zero_xflux.size() > 0) || (thinbody.zero_yflux.size() > 0)) {
+            Tau12_lev_op[lev] = std::make_unique<MultiFab>( ba12, dm, 1, IntVect(1,1,1) );
+        } else {
+            Tau12_lev_op[lev] = nullptr;
+        }
+        if ((thinbody.zero_xflux.size() > 0) || (thinbody.zero_zflux.size() > 0)) {
+            Tau13_lev_op[lev] = std::make_unique<MultiFab>( ba13, dm, 1, IntVect(1,1,1) );
+        } else {
+            Tau13_lev_op[lev] = nullptr;
+        }
+        if ((thinbody.zero_yflux.size() > 0) || (thinbody.zero_zflux.size() > 0)) {
+            Tau23_lev_op[lev] = std::make_unique<MultiFab>( ba23, dm, 1, IntVect(1,1,1) );
+        } else {
+            Tau23_lev_op[lev] = nullptr;
+        }
         SFS_hfx1_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(1,0,0)), dm, 1, IntVect(1,1,1) );
         SFS_hfx2_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(0,1,0)), dm, 1, IntVect(1,1,1) );
         SFS_hfx3_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(0,0,1)), dm, 1, IntVect(1,1,1) );

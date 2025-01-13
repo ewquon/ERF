@@ -19,6 +19,7 @@ void erf_make_tau_terms (int level, int nrk,
                          MultiFab* Tau11, MultiFab* Tau22, MultiFab* Tau33,
                          MultiFab* Tau12, MultiFab* Tau13, MultiFab* Tau21,
                          MultiFab* Tau23, MultiFab* Tau31, MultiFab* Tau32,
+                         MultiFab* Tau12_op, MultiFab* Tau13_op, MultiFab* Tau23_op,
                          MultiFab* SmnSmn,
                          MultiFab* eddyDiffs,
                          const Geometry geom,
@@ -170,6 +171,17 @@ void erf_make_tau_terms (int level, int nrk,
             // Symmetric strain/stresses
             Array4<Real> tau11 = Tau11->array(mfi); Array4<Real> tau22 = Tau22->array(mfi); Array4<Real> tau33 = Tau33->array(mfi);
             Array4<Real> tau12 = Tau12->array(mfi); Array4<Real> tau13 = Tau13->array(mfi); Array4<Real> tau23 = Tau23->array(mfi);
+
+            // Does some extra work if we're modeling thin bodies (with zero
+            // thickness) -- need to store two strains/stresses for each
+            // thin-body face
+            FArrayBox S12_op, S13_op, S23_op;
+            Array4<Real> s12_op = S12_op.array();
+            Array4<Real> s13_op = S13_op.array();
+            Array4<Real> s23_op = S23_op.array();
+            Array4<Real> tau12_op = (Tau12_op) ? Tau12_op->array(mfi) : Array4<Real>{};
+            Array4<Real> tau13_op = (Tau13_op) ? Tau13_op->array(mfi) : Array4<Real>{};
+            Array4<Real> tau23_op = (Tau23_op) ? Tau23_op->array(mfi) : Array4<Real>{};
 
             // Strain magnitude
             Array4<Real> SmnSmn_a;
@@ -349,6 +361,7 @@ void erf_make_tau_terms (int level, int nrk,
                                 u, v, w,
                                 s11, s22, s33,
                                 s12, s13, s23,
+                                s12_op, s13_op, s23_op,
                                 bc_ptr_h, dxInv,
                                 mf_m, mf_u, mf_v);
                 } // end profile

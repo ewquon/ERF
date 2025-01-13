@@ -93,7 +93,7 @@ struct TurbChoice {
             query_one_or_per_level(pp, "diffuse_KE_3D", diffuse_KE_3D, lev, max_level);
         }
 
-        // LES constants...
+        // Turbulence modeling constants
         query_one_or_per_level(pp, "Cs"  ,Cs, lev, max_level);
         query_one_or_per_level(pp, "Pr_t",Pr_t, lev, max_level);
         query_one_or_per_level(pp, "Sc_t",Sc_t, lev, max_level);
@@ -102,11 +102,10 @@ struct TurbChoice {
         Pr_t_inv = amrex::Real(1.0) / Pr_t;
         Sc_t_inv = amrex::Real(1.0) / Sc_t;
 
-        if (les_type == LESType::Deardorff) {
-            query_one_or_per_level(pp, "Ck"      , Ck     , lev, max_level);
-            query_one_or_per_level(pp, "Ce"      , Ce     , lev, max_level);
-            query_one_or_per_level(pp, "Ce_wall" , Ce_wall, lev, max_level);
-        }
+        // Deardorff LES
+        query_one_or_per_level(pp, "Ck"      , Ck     , lev, max_level);
+        query_one_or_per_level(pp, "Ce"      , Ce, lev, max_level);
+        query_one_or_per_level(pp, "Ce_wall" , Ce_wall, lev, max_level);
 
         // k-eqn constants
         query_one_or_per_level(pp, "Cmu0"           , Cmu0   , lev, max_level);

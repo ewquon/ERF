@@ -872,6 +872,17 @@ void ComputeTurbulentViscosity (const MultiFab& xvel , const MultiFab& yvel ,
                                       most, z_0, exp_most);
     }
 
+    if (turbChoice.rans_type != RANSType::None) {
+        ComputeTurbulentViscosityRANS(Tau11, Tau22, Tau33,
+                                      Tau12, Tau13, Tau23,
+                                      cons_in, wdist,
+                                      eddyViscosity,
+                                      Hfx1, Hfx2, Hfx3, Diss,
+                                      geom, mapfac_u, mapfac_v,
+                                      z_phys_nd, turbChoice, const_grav,
+                                      most, z_0, exp_most);
+    }
+
     if (turbChoice.pbl_type == PBLType::MYNN25) {
         ComputeDiffusivityMYNN25(xvel, yvel, cons_in, eddyViscosity,
                                  geom, turbChoice, most, use_moisture,

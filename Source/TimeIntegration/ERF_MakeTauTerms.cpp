@@ -177,6 +177,7 @@ void erf_make_tau_terms (int level, int nrk,
             // thickness) -- need to store two strains/stresses for each
             // thin-body face
             FArrayBox S12_op, S13_op, S23_op;
+            S12_op.resize(tbxxy,1,The_Async_Arena()); S13_op.resize(tbxxz,1,The_Async_Arena()); S23_op.resize(tbxyz,1,The_Async_Arena());
             Array4<Real> s12_op = S12_op.array();
             Array4<Real> s13_op = S13_op.array();
             Array4<Real> s23_op = S23_op.array();

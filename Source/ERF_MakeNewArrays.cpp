@@ -416,17 +416,17 @@ ERF::update_diffusive_arrays (int lev, const BoxArray& ba, const DistributionMap
             Tau31_lev[lev] = nullptr;
             Tau32_lev[lev] = nullptr;
         }
-        if ((thinbody.zero_xflux.size() > 0) || (thinbody.zero_yflux.size() > 0)) {
+        if (thinbody.have_xfaces || thinbody.have_yfaces) {
             Tau12_lev_op[lev] = std::make_unique<MultiFab>( ba12, dm, 1, IntVect(1,1,1) );
         } else {
             Tau12_lev_op[lev] = nullptr;
         }
-        if ((thinbody.zero_xflux.size() > 0) || (thinbody.zero_zflux.size() > 0)) {
+        if (thinbody.have_xfaces || thinbody.have_zfaces) {
             Tau13_lev_op[lev] = std::make_unique<MultiFab>( ba13, dm, 1, IntVect(1,1,1) );
         } else {
             Tau13_lev_op[lev] = nullptr;
         }
-        if ((thinbody.zero_yflux.size() > 0) || (thinbody.zero_zflux.size() > 0)) {
+        if (thinbody.have_yfaces|| thinbody.have_zfaces) {
             Tau23_lev_op[lev] = std::make_unique<MultiFab>( ba23, dm, 1, IntVect(1,1,1) );
         } else {
             Tau23_lev_op[lev] = nullptr;

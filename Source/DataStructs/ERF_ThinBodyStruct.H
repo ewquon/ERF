@@ -23,7 +23,10 @@ struct ThinImmersedBody {
         yfacelist_d.resize(zero_yflux.size());
         zfacelist_d.resize(zero_zflux.size());
 
-        have_zero_flux_faces = ((zero_xflux.size() > 0) || (zero_yflux.size() > 0) || (zero_zflux.size() > 0));
+        have_xfaces = (zero_xflux.size() > 0);
+        have_yfaces = (zero_yflux.size() > 0);
+        have_zfaces = (zero_zflux.size() > 0);
+        have_zero_flux_faces = (have_xfaces || have_yfaces || have_zfaces);
     }
 
     void create_extended_sets (const amrex::Box dom)
@@ -97,6 +100,9 @@ struct ThinImmersedBody {
     amrex::Vector<amrex::IntVect> zero_xflux;
     amrex::Vector<amrex::IntVect> zero_yflux;
     amrex::Vector<amrex::IntVect> zero_zflux;
+    bool have_xfaces = false;
+    bool have_yfaces = false;
+    bool have_zfaces = false;
     bool have_zero_flux_faces = false;
 
     // Extended sets

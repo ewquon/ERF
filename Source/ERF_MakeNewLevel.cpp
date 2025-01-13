@@ -91,6 +91,13 @@ void ERF::MakeNewLevelFromScratch (int lev, Real time, const BoxArray& ba_in,
     }
 
     // ********************************************************************************************
+    // Thin immersed body
+    //   Do this before update_diffusive_arrays, which dictates whether or not additional shear
+    //   stresses are initialized.
+    // ********************************************************************************************
+    init_thin_body(lev, ba, dm);
+
+    // ********************************************************************************************
     // Build the data structures for calculating diffusive/turbulent terms
     // ********************************************************************************************
     update_diffusive_arrays(lev, ba, dm);
@@ -99,11 +106,6 @@ void ERF::MakeNewLevelFromScratch (int lev, Real time, const BoxArray& ba_in,
     // Build the data structures for holding sea surface temps
     // ********************************************************************************************
     sst_lev[lev].resize(1);     sst_lev[lev][0] = nullptr;
-
-    // ********************************************************************************************
-    // Thin immersed body
-    // *******************************************************************************************
-    init_thin_body(lev, ba, dm);
 
     // ********************************************************************************************
     // Initialize the integrator class

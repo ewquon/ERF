@@ -162,6 +162,10 @@ void ERF::advance_dycore(int level,
             Array4<Real> tau13_op = (Tau13_lev_op[level]) ? Tau13_lev_op[level].get()->array(mfi) : Array4<Real>{};
             Array4<Real> tau23_op = (Tau23_lev_op[level]) ? Tau23_lev_op[level].get()->array(mfi) : Array4<Real>{};
 
+            Array4<Real> umean = (thinbody) ? Umean_lev[level].get()->array(mfi) : Array4<Real>{};
+            Array4<Real> vmean = (thinbody) ? Vmean_lev[level].get()->array(mfi) : Array4<Real>{};
+            Array4<Real> wmean = (thinbody) ? Wmean_lev[level].get()->array(mfi) : Array4<Real>{};
+
             const Array4<const Real> mf_m = mapfac_m[level]->array(mfi);
             const Array4<const Real> mf_u = mapfac_u[level]->array(mfi);
             const Array4<const Real> mf_v = mapfac_v[level]->array(mfi);
@@ -181,6 +185,7 @@ void ERF::advance_dycore(int level,
                                 tau11, tau22, tau33,
                                 tau12, tau13, tau23,
                                 tau12_op, tau13_op, tau23_op,
+                                umean, vmean, wmean,
                                 bc_ptr_h, dxInv,
                                 mf_m, mf_u, mf_v,
                                 thinbody);

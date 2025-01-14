@@ -161,6 +161,7 @@ void ComputeStrain_N (amrex::Box bxcc, amrex::Box tbxxy, amrex::Box tbxxz, amrex
                      amrex::Array4<amrex::Real>& tau11, amrex::Array4<amrex::Real>& tau22, amrex::Array4<amrex::Real>& tau33,
                      amrex::Array4<amrex::Real>& tau12, amrex::Array4<amrex::Real>& tau13, amrex::Array4<amrex::Real>& tau23,
                      amrex::Array4<amrex::Real>& tau12_op, amrex::Array4<amrex::Real>& tau13_op, amrex::Array4<amrex::Real>& tau23_op,
+                     amrex::Array4<amrex::Real>& umean, amrex::Array4<amrex::Real>& vmean, amrex::Array4<amrex::Real>& wmean,
                      const amrex::BCRec* bc_ptr, const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dxInv,
                      const amrex::Array4<const amrex::Real>& mf_m, const amrex::Array4<const amrex::Real>& mf_u, const amrex::Array4<const amrex::Real>& mf_v,
                      const ThinImmersedBody& thinbody);

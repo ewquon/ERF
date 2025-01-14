@@ -20,6 +20,7 @@ void erf_make_tau_terms (int level, int nrk,
                          MultiFab* Tau12, MultiFab* Tau13, MultiFab* Tau21,
                          MultiFab* Tau23, MultiFab* Tau31, MultiFab* Tau32,
                          MultiFab* Tau12_op, MultiFab* Tau13_op, MultiFab* Tau23_op,
+                         MultiFab* Umean, MultiFab* Vmean, MultiFab* Wmean,
                          MultiFab* SmnSmn,
                          MultiFab* eddyDiffs,
                          const Geometry geom,
@@ -187,6 +188,9 @@ void erf_make_tau_terms (int level, int nrk,
             Array4<Real> tau12_op = (Tau12_op) ? Tau12_op->array(mfi) : Array4<Real>{};
             Array4<Real> tau13_op = (Tau13_op) ? Tau13_op->array(mfi) : Array4<Real>{};
             Array4<Real> tau23_op = (Tau23_op) ? Tau23_op->array(mfi) : Array4<Real>{};
+            Array4<Real> umean = (Umean) ? Umean->array(mfi) : Array4<Real>{};
+            Array4<Real> vmean = (Vmean) ? Vmean->array(mfi) : Array4<Real>{};
+            Array4<Real> wmean = (Wmean) ? Wmean->array(mfi) : Array4<Real>{};
 
             // Strain magnitude
             Array4<Real> SmnSmn_a;
@@ -367,6 +371,7 @@ void erf_make_tau_terms (int level, int nrk,
                                 s11, s22, s33,
                                 s12, s13, s23,
                                 s12_op, s13_op, s23_op,
+                                umean,vmean,wmean,
                                 bc_ptr_h, dxInv,
                                 mf_m, mf_u, mf_v,
                                 thinbody);

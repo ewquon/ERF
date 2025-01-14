@@ -20,10 +20,14 @@ void DiffusionSrcForMom_N (const amrex::Box& bxx, const amrex::Box& bxy, const a
                            const amrex::Array4<const amrex::Real>& tau12    ,
                            const amrex::Array4<const amrex::Real>& tau13    ,
                            const amrex::Array4<const amrex::Real>& tau23    ,
+                           const amrex::Array4<const amrex::Real>& tau12_op ,
+                           const amrex::Array4<const amrex::Real>& tau13_op ,
+                           const amrex::Array4<const amrex::Real>& tau23_op ,
                            const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dxInv,
                            const amrex::Array4<const amrex::Real>& mf_m      ,
                            const amrex::Array4<const amrex::Real>& mf_u      ,
-                           const amrex::Array4<const amrex::Real>& mf_v      );
+                           const amrex::Array4<const amrex::Real>& mf_v      ,
+                           const ThinImmersedBody& thinbody);
 
 void DiffusionSrcForMom_T (const amrex::Box& bxx, const amrex::Box& bxy, const amrex::Box& bxz,
                            const amrex::Array4<      amrex::Real>& rho_u_rhs,
@@ -132,7 +136,9 @@ void ComputeStressVarVisc_N (amrex::Box bxcc, amrex::Box tbxxy, amrex::Box tbxxz
                              const amrex::Array4<const amrex::Real>& cell_data,
                              amrex::Array4<amrex::Real>& tau11, amrex::Array4<amrex::Real>& tau22, amrex::Array4<amrex::Real>& tau33,
                              amrex::Array4<amrex::Real>& tau12, amrex::Array4<amrex::Real>& tau13, amrex::Array4<amrex::Real>& tau23,
-                             const amrex::Array4<const amrex::Real>& er_arr);
+                             amrex::Array4<amrex::Real>& tau12_op, amrex::Array4<amrex::Real>& tau13_op, amrex::Array4<amrex::Real>& tau23_op,
+                             const amrex::Array4<const amrex::Real>& er_arr,
+                             const ThinImmersedBody& thinbody);
 
 void ComputeStressVarVisc_T (amrex::Box bxcc, amrex::Box tbxxy, amrex::Box tbxxz, amrex::Box tbxyz, amrex::Real mu_eff,
                              const amrex::Array4<const amrex::Real>& mu_turb,

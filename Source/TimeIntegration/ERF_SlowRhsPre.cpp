@@ -437,6 +437,11 @@ void erf_slow_rhs_pre (int level, int finest_level,
             tau21 = Array4<Real>{}; tau31 = Array4<Real>{}; tau32 = Array4<Real>{};
         }
 
+        // Diffusion on thin-body faces
+        Array4<Real> tau12_op = (Tau12_op) ? Tau12_op->array(mfi) : Array4<Real>{};
+        Array4<Real> tau13_op = (Tau13_op) ? Tau13_op->array(mfi) : Array4<Real>{};
+        Array4<Real> tau23_op = (Tau23_op) ? Tau23_op->array(mfi) : Array4<Real>{};
+
         // Strain magnitude
         Array4<Real> SmnSmn_a;
         if (l_need_SmnSmn) {
@@ -590,8 +595,10 @@ void erf_slow_rhs_pre (int level, int finest_level,
                                      rho_u_rhs, rho_v_rhs, rho_w_rhs,
                                      tau11, tau22, tau33,
                                      tau12, tau13, tau23,
+                                     tau12_op, tau13_op, tau23_op,
                                      dxInv,
-                                     mf_m, mf_u, mf_v);
+                                     mf_m, mf_u, mf_v,
+                                     thinbody);
             }
         }
 

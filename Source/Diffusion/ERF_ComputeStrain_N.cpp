@@ -18,6 +18,9 @@ using namespace amrex;
  * @param[out] tau12 12 strain
  * @param[out] tau13 13 strain
  * @param[out] tau23 23 strain
+ * @param[out] tau12_op 12 strain (for thinbody faces)
+ * @param[out] tau13_op 13 strain (for thinbody faces)
+ * @param[out] tau23_op 23 strain (for thinbody faces)
  * @param[in] bc_ptr container with boundary condition types
  * @param[in] dxInv inverse cell size array
  * @param[in] mf_m map factor at cell center
@@ -237,4 +240,82 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
 
     // Update shear strains if we have thin bodies
     //***********************************************************************************
+    // TODO: handle corners, implement higher-order
+    if (thinbody.have_xfaces || thinbody.have_yfaces) {
+        AMREX_ASSERT(tau12_op);
+        const auto& tb_xfaces = thinbody.xfacelist_d;
+        const auto& tb_yfaces = thinbody.yfacelist_d;
+
+        ParallelFor(tbxxy,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            // strain is staggered in 2 directions, need to check edge
+            int next_to_xface = is_touching_thin_body_xface(i, j, k, tb_xfaces, 1); // also check j-1
+            int next_to_yface = is_touching_thin_body_yface(i, j, k, tb_yfaces, 0); // also check i-1
+
+            if (next_to_xface < 0) {
+                // thin body on low x-face, use forward stencil
+                tau12(i,j,k)      = 0.5 * ( ( -v(i,j,k) + v(i+1,j  ,k) ) * dxInv[0]*mf_u(i,j,0)
+                                          + (  u(i,j,k) - u(i  ,j-1,k) ) * dxInv[1]*mf_v(i,j,0) );
+            } else if (next_to_xface > 0) {
+                // thin body on high x-face, use backward stencil
+                tau12_op(i+1,j,k) = 0.5 * ( (  v(i,j,k) - v(i-1,j  ,k) ) * dxInv[0]*mf_u(i,j,0)
+                                          + (  u(i,j,k) - u(i  ,j-1,k) ) * dxInv[1]*mf_v(i,j,0) );
+            } else if (next_to_yface < 0) {
+                // thin body on low y-face, use forward stencil
+                //AllPrint() << "Setting s12" << IntVect(i,j,k) << std::endl;
+              //tau12_op(i,j+1,k) = 0.5 * ( ( -2*u(i,j,k) + 3*u(i  ,j+1,k) - u(i,j+2,k) ) * dxInv[1]*mf_v(i,j,0)
+                tau12(i,j,k)      = 0.5 * ( ( -u(i,j,k) + u(i  ,j+1,k) ) * dxInv[1]*mf_v(i,j,0)
+                                          + (  v(i,j,k) - v(i-1,j  ,k) ) * dxInv[0]*mf_u(i,j,0) );
+                }
+            } else if (next_to_yface > 0) {
+                // thin body on high y-face, use backward stencil
+                //AllPrint() << "Setting s12_op" << IntVect(i,j+1,k) << std::endl;
+              //tau12_op(i,j+1,k) = 0.5 * ( ( 2*u(i,j,k) - 3*u(i  ,j-1,k) + u(i,j-2,k) ) * dxInv[1]*mf_v(i,j,0)
+                tau12_op(i,j+1,k) = 0.5 * ( (  u(i,j,k) - u(i  ,j-1,k) ) * dxInv[1]*mf_v(i,j,0)
+                                          + (  v(i,j,k) - v(i-1,j  ,k) ) * dxInv[0]*mf_u(i,j,0) );
+            }
+        });
+    }
+    if (thinbody.have_xfaces || thinbody.have_zfaces) {
+        AMREX_ASSERT(tau13_op);
+        const auto& tb_xfaces = thinbody.xfacelist_d;
+        const auto& tb_zfaces = thinbody.zfacelist_d;
+
+        ParallelFor(tbxxz,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            int next_to_xface = is_touching_thin_body_xface(i, j, k, tb_xfaces, 2); // also check k-1
+            int next_to_zface = is_touching_thin_body_zface(i, j, k, tb_zfaces, 0); // also check i-1
+
+            if (next_to_xface < 0) {
+                // thin body on low x-face, use forward stencil
+            } else if (next_to_xface > 0) {
+                // thin body on high x-face, use backward stencil
+            } else if (next_to_zface < 0) {
+                // thin body on low z-face, use forward stencil
+            } else if (next_to_zface > 0) {
+                // thin body on high z-face, use backward stencil
+            }
+        });
+    }
+    if (thinbody.have_yfaces || thinbody.have_zfaces) {
+        AMREX_ASSERT(tau23_op);
+        const auto& tb_yfaces = thinbody.yfacelist_d;
+        const auto& tb_zfaces = thinbody.zfacelist_d;
+
+        ParallelFor(tbxyz,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            int next_to_yface = is_touching_thin_body_yface(i, j, k, tb_yfaces, 2); // also check k-1
+            int next_to_zface = is_touching_thin_body_zface(i, j, k, tb_zfaces, 1); // also check j-1
+
+            if (next_to_yface < 0) {
+                // thin body on low y-face, use forward stencil
+            } else if (next_to_yface > 0) {
+                // thin body on high y-face, use backward stencil
+            } else if (next_to_zface < 0) {
+                // thin body on low z-face, use forward stencil
+            } else if (next_to_zface > 0) {
+                // thin body on high z-face, use backward stencil
+            }
+        });
+    }
 }

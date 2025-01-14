@@ -178,6 +178,9 @@ void erf_make_tau_terms (int level, int nrk,
             // thin-body face
             FArrayBox S12_op, S13_op, S23_op;
             S12_op.resize(tbxxy,1,The_Async_Arena()); S13_op.resize(tbxxz,1,The_Async_Arena()); S23_op.resize(tbxyz,1,The_Async_Arena());
+            S12_op.setVal(1e34);
+            S12_op.setVal(1e34);
+            S12_op.setVal(1e34);
             Array4<Real> s12_op = S12_op.array();
             Array4<Real> s13_op = S13_op.array();
             Array4<Real> s23_op = S23_op.array();
@@ -424,7 +427,9 @@ void erf_make_tau_terms (int level, int nrk,
                                            cell_data,
                                            s11, s22, s33,
                                            s12, s13, s23,
-                                           er_arr);
+                                           s12_op, s13_op, s23_op,
+                                           er_arr,
+                                           thinbody);
                 }
 
                 // Remove halo cells from tau_ii but extend across valid_box bdry

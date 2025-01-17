@@ -165,18 +165,13 @@ ComputeStressVarVisc_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Real mu_eff,
             tau33(i,j,k) = -mu_33 * ( tau33(i,j,k) - OneThird*er_arr(i,j,k) );
         });
 
-        // Off-diagonal strains -- default calculation
+        // Off-diagonal strains
         ParallelFor(tbxxy,tbxxz,tbxyz,
         [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
             Real mu_bar = 0.25*( mu_turb(i-1, j  , k, EddyDiff::Mom_h) + mu_turb(i, j  , k, EddyDiff::Mom_h)
                                + mu_turb(i-1, j-1, k, EddyDiff::Mom_h) + mu_turb(i, j-1, k, EddyDiff::Mom_h) );
             Real mu_12  = mu_eff + 2.0*mu_bar;
             tau12(i,j,k) *= -mu_12;
-            if ((i==125) && (j==125)) {
-                AllPrint() << "tau12 (w/o tb)" << IntVect(i,j,k) << " = " << tau12(i,j,k)
-                    << "  u* = " << std::sqrt(std::abs(tau12(i,j,k)))
-                    << std::endl;
-            }
         },
         [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
             Real mu_bar = 0.25*( mu_turb(i-1, j, k  , EddyDiff::Mom_v) + mu_turb(i, j, k  , EddyDiff::Mom_v)

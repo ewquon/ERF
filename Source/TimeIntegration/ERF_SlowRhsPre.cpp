@@ -41,12 +41,6 @@ using namespace amrex;
  * @param[in] Tau23 tau_23 component of stress tensor
  * @param[in] Tau31 tau_31 component of stress tensor
  * @param[in] Tau32 tau_32 component of stress tensor
- * @param[in] Tau12_op tau_12 component of stress tensor (for thin body, on opposite face)
- * @param[in] Tau13_op tau_13 component of stress tensor
- * @param[in] Tau23_op tau_23 component of stress tensor
- * @param[in] Umean mean x velocity (for thin bodies)
- * @param[in] Vmean mean y velocity (for thin bodies)
- * @param[in] Wmean mean z velocity (for thin bodies)
  * @param[in] SmnSmn strain rate magnitude
  * @param[in] eddyDiffs diffusion coefficients for LES turbulence models
  * @param[in] Hfx3 heat flux in z-dir
@@ -90,8 +84,6 @@ void erf_slow_rhs_pre (int level, int finest_level,
                        MultiFab* Tau11, MultiFab* Tau22, MultiFab* Tau33,
                        MultiFab* Tau12, MultiFab* Tau13, MultiFab* Tau21,
                        MultiFab* Tau23, MultiFab* Tau31, MultiFab* Tau32,
-                       MultiFab* Tau12_op, MultiFab* Tau13_op, MultiFab* Tau23_op,
-                       MultiFab* Umean, MultiFab* Vmean, MultiFab* Wmean,
                        MultiFab* SmnSmn,
                        MultiFab* eddyDiffs,
                        MultiFab* Hfx1,
@@ -199,8 +191,6 @@ void erf_slow_rhs_pre (int level, int finest_level,
         erf_make_tau_terms(level,nrk,domain_bcs_type_h,z_phys_nd,
                            S_data,xvel,yvel,zvel,
                            Tau11,Tau22,Tau33,Tau12,Tau13,Tau21,Tau23,Tau31,Tau32,
-                           Tau12_op,Tau13_op,Tau23_op,
-                           Umean,Vmean,Wmean,
                            SmnSmn,eddyDiffs,geom,solverChoice,most,
                            detJ,mapfac_m,mapfac_u,mapfac_v,thinbody);
 
@@ -444,11 +434,6 @@ void erf_slow_rhs_pre (int level, int finest_level,
         } else {
             tau21 = Array4<Real>{}; tau31 = Array4<Real>{}; tau32 = Array4<Real>{};
         }
-
-        // Diffusion on thin-body faces
-        Array4<Real> tau12_op = (Tau12_op) ? Tau12_op->array(mfi) : Array4<Real>{};
-        Array4<Real> tau13_op = (Tau13_op) ? Tau13_op->array(mfi) : Array4<Real>{};
-        Array4<Real> tau23_op = (Tau23_op) ? Tau23_op->array(mfi) : Array4<Real>{};
 
         // Strain magnitude
         Array4<Real> SmnSmn_a;

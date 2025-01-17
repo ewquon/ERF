@@ -416,33 +416,6 @@ ERF::update_diffusive_arrays (int lev, const BoxArray& ba, const DistributionMap
             Tau31_lev[lev] = nullptr;
             Tau32_lev[lev] = nullptr;
         }
-        if (thinbody.have_xfaces || thinbody.have_yfaces) {
-            Tau12_lev_op[lev] = std::make_unique<MultiFab>( ba12, dm, 1, IntVect(1,1,1) );
-        } else {
-            Tau12_lev_op[lev] = nullptr;
-        }
-        if (thinbody.have_xfaces || thinbody.have_zfaces) {
-            Tau13_lev_op[lev] = std::make_unique<MultiFab>( ba13, dm, 1, IntVect(1,1,1) );
-        } else {
-            Tau13_lev_op[lev] = nullptr;
-        }
-        if (thinbody.have_yfaces|| thinbody.have_zfaces) {
-            Tau23_lev_op[lev] = std::make_unique<MultiFab>( ba23, dm, 1, IntVect(1,1,1) );
-        } else {
-            Tau23_lev_op[lev] = nullptr;
-        }
-        if (thinbody) {
-            Umean_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(1,0,0)), dm, 1, IntVect(1,1,1) );
-            Vmean_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(0,1,0)), dm, 1, IntVect(1,1,1) );
-            Wmean_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(0,0,1)), dm, 1, IntVect(1,1,1) );
-            Umean_lev[lev]->setVal(0.);
-            Vmean_lev[lev]->setVal(0.);
-            Wmean_lev[lev]->setVal(0.);
-        } else {
-            Umean_lev[lev] = nullptr;
-            Vmean_lev[lev] = nullptr;
-            Wmean_lev[lev] = nullptr;
-        }
         SFS_hfx1_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(1,0,0)), dm, 1, IntVect(1,1,1) );
         SFS_hfx2_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(0,1,0)), dm, 1, IntVect(1,1,1) );
         SFS_hfx3_lev[lev] = std::make_unique<MultiFab>( convert(ba,IntVect(0,0,1)), dm, 1, IntVect(1,1,1) );

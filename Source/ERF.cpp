@@ -250,8 +250,6 @@ ERF::ERF_shared ()
     Tau12_lev.resize(nlevs_max); Tau21_lev.resize(nlevs_max);
     Tau13_lev.resize(nlevs_max); Tau31_lev.resize(nlevs_max);
     Tau23_lev.resize(nlevs_max); Tau32_lev.resize(nlevs_max);
-    Tau12_lev_op.resize(nlevs_max); Tau13_lev_op.resize(nlevs_max); Tau23_lev_op.resize(nlevs_max);
-    Umean_lev.resize(nlevs_max); Vmean_lev.resize(nlevs_max); Wmean_lev.resize(nlevs_max);
     SFS_hfx1_lev.resize(nlevs_max); SFS_hfx2_lev.resize(nlevs_max); SFS_hfx3_lev.resize(nlevs_max);
     SFS_diss_lev.resize(nlevs_max);
     SFS_q1fx1_lev.resize(nlevs_max); SFS_q1fx2_lev.resize(nlevs_max); SFS_q1fx3_lev.resize(nlevs_max);

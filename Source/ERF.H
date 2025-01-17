@@ -812,8 +812,6 @@ private:
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> Tau12_lev, Tau21_lev;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> Tau13_lev, Tau31_lev;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> Tau23_lev, Tau32_lev;
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> Tau12_lev_op, Tau13_lev_op, Tau23_lev_op; // to store thin body stresses corresponding to coincident, opposite faces
-    amrex::Vector<std::unique_ptr<amrex::MultiFab>> Umean_lev, Vmean_lev, Wmean_lev;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> eddyDiffs_lev;
     amrex::Vector<std::unique_ptr<amrex::MultiFab>> SmnSmn_lev;
 

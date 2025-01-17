@@ -370,8 +370,6 @@ void erf_make_tau_terms (int level, int nrk,
                                 u, v, w,
                                 s11, s22, s33,
                                 s12, s13, s23,
-                                s12_op, s13_op, s23_op,
-                                umean,vmean,wmean,
                                 bc_ptr_h, dxInv,
                                 mf_m, mf_u, mf_v,
                                 thinbody);

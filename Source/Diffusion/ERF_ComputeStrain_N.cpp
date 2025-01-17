@@ -18,12 +18,6 @@ using namespace amrex;
  * @param[out] tau12 12 strain
  * @param[out] tau13 13 strain
  * @param[out] tau23 23 strain
- * @param[out] tau12_op 12 strain (for thinbody faces)
- * @param[out] tau13_op 13 strain (for thinbody faces)
- * @param[out] tau23_op 23 strain (for thinbody faces)
- * @param[inout] umean (for thin bodies)
- * @param[inout] vmean (for thin bodies)
- * @param[inout] wmean (for thin bodies)
  * @param[in] bc_ptr container with boundary condition types
  * @param[in] dxInv inverse cell size array
  * @param[in] mf_m map factor at cell center
@@ -36,8 +30,6 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
                  const Array4<const Real>& u, const Array4<const Real>& v, const Array4<const Real>& w,
                  Array4<Real>& tau11, Array4<Real>& tau22, Array4<Real>& tau33,
                  Array4<Real>& tau12, Array4<Real>& tau13, Array4<Real>& tau23,
-                 Array4<Real>& tau12_op, Array4<Real>& tau13_op, Array4<Real>& tau23_op,
-                 Array4<Real>& umean, Array4<Real>& vmean, Array4<Real>& wmean,
                  const BCRec* bc_ptr, const GpuArray<Real, AMREX_SPACEDIM>& dxInv,
                  const Array4<const Real>& mf_m, const Array4<const Real>& mf_u, const Array4<const Real>& mf_v,
                  const ThinImmersedBody& thinbody)
@@ -245,9 +237,8 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
 
     // Modify shear strains if we have thin bodies
     //***********************************************************************************
-    // TODO: handle corners; probably more efficient to use particles
+    // TODO: probably more efficient to use particles than a list search?
     if (thinbody.have_xfaces || thinbody.have_yfaces) {
-        AMREX_ASSERT(tau12_op);
         const auto& tb_xfaces = thinbody.xfacelist_d;
         const auto& tb_yfaces = thinbody.yfacelist_d;
 
@@ -257,78 +248,18 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
             int next_to_xface = is_touching_thin_body_xface(i, j, k, tb_xfaces, 1); // also check j-1
             int next_to_yface = is_touching_thin_body_yface(i, j, k, tb_yfaces, 0); // also check i-1
 
-#if 0
-            // HACK -- exclude edge pts
-            if ((i<=123) ||
-                (i>=128) ||
-                (j<124)  ||
-                (j>125)) {
-                next_to_xface = 0;
-                next_to_yface = 0;
-            }
-#endif
-
             if (next_to_xface < 0) {
-                // thin body on low x-face, use forward stencil
-              //tau12(i,j,k)      = 0.5 * ( ( -v(i,j,k) + v(i+1,j  ,k) ) * dxInv[0]*mf_u(i,j,0)
-              //                          + (  u(i,j,k) - u(i  ,j-1,k) ) * dxInv[1]*mf_v(i,j,0) );
-            } else if (next_to_xface > 0) {
-                // thin body on high x-face, use backward stencil
-              //tau12_op(i+1,j,k) = 0.5 * ( (  v(i,j,k) - v(i-1,j  ,k) ) * dxInv[0]*mf_u(i,j,0)
-              //                          + (  u(i,j,k) - u(i  ,j-1,k) ) * dxInv[1]*mf_v(i,j,0) );
-            } else if (next_to_yface < 0) {
-                // thin body on low y-face, use forward stencil
-                //AllPrint() << "Setting s12" << IntVect(i,j,k) << std::endl;
-
-                // second-order (this is numerically unstable):
-              //tau12_op(i,j+1,k) = 0.5 * ( ( -2*u(i,j,k) + 3*u(i  ,j+1,k) - u(i,j+2,k) ) * dxInv[1]*mf_v(i,j,0)
-
-                // first-order:
-              //tau12(i,j,k)      = 0.5 * ( ( -u(i,j,k) + u(i  ,j+1,k) ) * dxInv[1]*mf_v(i,j,0)
-              //                          + (  v(i,j,k) - v(i-1,j  ,k) ) * dxInv[0]*mf_u(i,j,0) );
-
                 tau12(i,j,k) = 0.0;
-
-                // log law: u* = kappa y (du/dy) ~ kappa (Δy/2) (Δu/Δy) = kappa Δu / 2
-              //Real ustar = KAPPA * 0.5*(u(i,j+1,k) - u(i,j,k));
-              //Real umean = 0.5*(u(i,j+1,k) + u(i,j,k));
-              //tau12(i,j,k) = (umean < 0) ? -ustar*ustar : ustar*ustar;
-              //if ((i>=123) && (i<=128) && (j==125)) {
-              //    AllPrint() << "S12" << IntVect(i,j,k) << " = " << tau12(i,j,k)
-              //        << " v= " << v(i-1,j,k) << " " << v(i,j,k)
-              //        << " y+=" << ustar / (2*dxInv[1]*1e-5)
-              //        << " ustar=" << ustar << " umean=" << umean
-              //        << std::endl;
-              //}
+            } else if (next_to_xface > 0) {
+                tau12(i+1,j,k) = 0.0;
+            } else if (next_to_yface < 0) {
+                tau12(i,j,k) = 0.0;
             } else if (next_to_yface > 0) {
-                // thin body on high y-face, use backward stencil
-                //AllPrint() << "Setting s12_op" << IntVect(i,j+1,k) << std::endl;
-
-                // second-order (this is numerically unstable):
-                //tau12_op(i,j+1,k) = 0.5 * ( ( 2*u(i,j,k) - 3*u(i  ,j-1,k) + u(i,j-2,k) ) * dxInv[1]*mf_v(i,j,0)
-
-                // first-order:
-              //tau12_op(i,j+1,k) = 0.5 * ( (  u(i,j,k) - u(i  ,j-1,k) ) * dxInv[1]*mf_v(i,j,0)
-              //                          + (  v(i,j,k) - v(i-1,j  ,k) ) * dxInv[0]*mf_u(i,j,0) );
-
-              //tau12_op(i,j+1,k) = 0.0;
-
-                // log law: u* = kappa y (du/dy) ~ kappa (Δy/2) (Δu/Δy) = kappa Δu / 2
-              //Real ustar = KAPPA * 0.5*(u(i,j,k) - u(i,j-1,k));
-              //Real umean = 0.5*(u(i,j,k) + u(i,j-1,k));
-              //tau12_op(i,j+1,k) = (umean < 0) ? -ustar*ustar : ustar*ustar;
-              //if ((i>=123) && (i<=128) && (j+1==125)) {
-              //    AllPrint() << "S12_op" << IntVect(i,j+1,k) << " = " << tau12_op(i,j+1,k)
-              //        << " v= " << v(i-1,j+1,k) << " " << v(i,j+1,k)
-              //        << " y+=" << ustar / (2*dxInv[1]*1e-5)
-              //        << " ustar=" << ustar << " umean=" << umean
-              //        << std::endl;
-              //}
+                tau12(i,j+1,k) = 0.0;
             }
         });
     }
     if (thinbody.have_xfaces || thinbody.have_zfaces) {
-        AMREX_ASSERT(tau13_op);
         const auto& tb_xfaces = thinbody.xfacelist_d;
         const auto& tb_zfaces = thinbody.zfacelist_d;
 
@@ -337,21 +268,18 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
             int next_to_xface = is_touching_thin_body_xface(i, j, k, tb_xfaces, 2); // also check k-1
             int next_to_zface = is_touching_thin_body_zface(i, j, k, tb_zfaces, 0); // also check i-1
 
-            tau13(i,j,k) = 0.0;
-
             if (next_to_xface < 0) {
-                // thin body on low x-face, use forward stencil
+                tau13(i,j,k) = 0.0;
             } else if (next_to_xface > 0) {
-                // thin body on high x-face, use backward stencil
+                tau13(i+1,j,k) = 0.0;
             } else if (next_to_zface < 0) {
-                // thin body on low z-face, use forward stencil
+                tau13(i,j,k) = 0.0;
             } else if (next_to_zface > 0) {
-                // thin body on high z-face, use backward stencil
+                tau13(i,j,k+1) = 0.0;
             }
         });
     }
     if (thinbody.have_yfaces || thinbody.have_zfaces) {
-        AMREX_ASSERT(tau23_op);
         const auto& tb_yfaces = thinbody.yfacelist_d;
         const auto& tb_zfaces = thinbody.zfacelist_d;
 
@@ -360,16 +288,14 @@ ComputeStrain_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Box domain,
             int next_to_yface = is_touching_thin_body_yface(i, j, k, tb_yfaces, 2); // also check k-1
             int next_to_zface = is_touching_thin_body_zface(i, j, k, tb_zfaces, 1); // also check j-1
 
-            tau23(i,j,k) = 0.0;
-
             if (next_to_yface < 0) {
-                // thin body on low y-face, use forward stencil
+                tau23(i,j,k) = 0.0;
             } else if (next_to_yface > 0) {
-                // thin body on high y-face, use backward stencil
+                tau23(i,j+1,k) = 0.0;
             } else if (next_to_zface < 0) {
-                // thin body on low z-face, use forward stencil
+                tau23(i,j,k) = 0.0;
             } else if (next_to_zface > 0) {
-                // thin body on high z-face, use backward stencil
+                tau23(i,j,k+1) = 0.0;
             }
         });
     }

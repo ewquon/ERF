@@ -46,7 +46,7 @@ DiffusionSrcForMom_N (const Box& bxx, const Box& bxy , const Box& bxz,
 
     auto dxinv = dxInv[0], dyinv = dxInv[1], dzinv = dxInv[2];
 
-    if (!thinbody) {
+//    if (!thinbody) {
         // default calculation w/o thin bodies
         ParallelFor(bxx, bxy, bxz,
         [=] AMREX_GPU_DEVICE (int i, int j, int k)
@@ -73,6 +73,7 @@ DiffusionSrcForMom_N (const Box& bxx, const Box& bxy , const Box& bxz,
                                 + (tau23(i  , j+1, k  ) - tau23(i  , j  , k  )) * dyinv * mf   // Contribution to z-mom eqn from diffusive flux in y-dir
                                 + (tau33(i  , j  , k  ) - tau33(i  , j  , k-1)) * dzinv );     // Contribution to z-mom eqn from diffusive flux in z-dir;
         });
+#if 0
     } else {
         const auto& tb_xfaces = thinbody.xfacelist_d;
         const auto& tb_yfaces = thinbody.yfacelist_d;
@@ -97,10 +98,18 @@ DiffusionSrcForMom_N (const Box& bxx, const Box& bxy , const Box& bxz,
         {
             Real mf   = mf_m(i,j,0);
 
-            int next_to_yface = ( is_touching_thin_body_yface(i  , j  , k, tb_yfaces) ||
-                                  is_touching_thin_body_yface(i-1, j  , k, tb_yfaces) );
-          //int next_to_zface = ( is_touching_thin_body_zface(i  , j, k  , tb_zfaces) ||
-          //                      is_touching_thin_body_zface(i-1, j, k  , tb_zfaces) );
+            int next_to_yface = is_touching_thin_body_yface(i, j, k, tb_yfaces, 0); // also check i-1
+          //int next_to_zface = is_touching_thin_body_zface(i, j, k, tb_zfaces, 0); // also check i-1
+#if 0
+            // HACK -- exclude edge pts
+            if ((i<=123) ||
+                (i>=128) ||
+                (j<124)  ||
+                (j>125)) {
+                next_to_yface = 0;
+            }
+#endif
+
             Real tau12_hi = (next_to_yface > 0) ? tau12_op(i, j+1, k  ) : tau12(i, j+1, k  );
           //Real tau13_hi = (next_to_zface > 0) ? tau13_op(i, j  , k+1) : tau13(i, j  , k+1);
 
@@ -108,6 +117,17 @@ DiffusionSrcForMom_N (const Box& bxx, const Box& bxy , const Box& bxz,
                                 + (tau12_hi             - tau12(i  , j  ,k  )) * dyinv * mf   // Contribution to x-mom eqn from diffusive flux in y-dir
           //                    + (tau13_hi             - tau13(i  , j  ,k  )) * dzinv );     // Contribution to x-mom eqn from diffusive flux in z-dir;
                                 + (tau13(i  , j  , k+1) - tau13(i  , j  ,k  )) * dzinv );     // Contribution to x-mom eqn from diffusive flux in z-dir;
+            if ( (i>=123) && (i<=128) &&
+                 ((j==124)||(j==125)) ) {
+                AllPrint() << "rho_u_rhs" << IntVect(i,j,k) << " = " << rho_u_rhs(i,j,k)
+                    << " tau11_hi=" << tau11(i,j,k)
+                    << " tau11_lo=" << tau11(i-1,j,k)
+                    << " tau12_hi=" << tau12_hi
+                    << " tau12_lo=" << tau12(i,j,k)
+                    //<< " tau13_hi=" << tau13(i,j,k+1)
+                    //<< " tau13_lo=" << tau13(i,j,k)
+                    << std::endl;
+            }
         },
         [=] AMREX_GPU_DEVICE (int i, int j, int k)
         {
@@ -126,4 +146,5 @@ DiffusionSrcForMom_N (const Box& bxx, const Box& bxy , const Box& bxz,
                                 + (tau33(i  , j  , k  ) - tau33(i  , j  , k-1)) * dzinv );     // Contribution to z-mom eqn from diffusive flux in z-dir;
         });
     }
+#endif
 }

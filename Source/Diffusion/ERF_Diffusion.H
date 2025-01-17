@@ -20,14 +20,10 @@ void DiffusionSrcForMom_N (const amrex::Box& bxx, const amrex::Box& bxy, const a
                            const amrex::Array4<const amrex::Real>& tau12    ,
                            const amrex::Array4<const amrex::Real>& tau13    ,
                            const amrex::Array4<const amrex::Real>& tau23    ,
-                           const amrex::Array4<const amrex::Real>& tau12_op ,
-                           const amrex::Array4<const amrex::Real>& tau13_op ,
-                           const amrex::Array4<const amrex::Real>& tau23_op ,
                            const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM>& dxInv,
                            const amrex::Array4<const amrex::Real>& mf_m      ,
                            const amrex::Array4<const amrex::Real>& mf_u      ,
-                           const amrex::Array4<const amrex::Real>& mf_v      ,
-                           const ThinImmersedBody& thinbody);
+                           const amrex::Array4<const amrex::Real>& mf_v);
 
 void DiffusionSrcForMom_T (const amrex::Box& bxx, const amrex::Box& bxy, const amrex::Box& bxz,
                            const amrex::Array4<      amrex::Real>& rho_u_rhs,

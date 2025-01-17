@@ -136,9 +136,7 @@ void ComputeStressVarVisc_N (amrex::Box bxcc, amrex::Box tbxxy, amrex::Box tbxxz
                              const amrex::Array4<const amrex::Real>& cell_data,
                              amrex::Array4<amrex::Real>& tau11, amrex::Array4<amrex::Real>& tau22, amrex::Array4<amrex::Real>& tau33,
                              amrex::Array4<amrex::Real>& tau12, amrex::Array4<amrex::Real>& tau13, amrex::Array4<amrex::Real>& tau23,
-                             amrex::Array4<amrex::Real>& tau12_op, amrex::Array4<amrex::Real>& tau13_op, amrex::Array4<amrex::Real>& tau23_op,
-                             const amrex::Array4<const amrex::Real>& er_arr,
-                             const ThinImmersedBody& thinbody);
+                             const amrex::Array4<const amrex::Real>& er_arr);
 
 void ComputeStressVarVisc_T (amrex::Box bxcc, amrex::Box tbxxy, amrex::Box tbxxz, amrex::Box tbxyz, amrex::Real mu_eff,
                              const amrex::Array4<const amrex::Real>& mu_turb,

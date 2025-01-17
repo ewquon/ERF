@@ -430,9 +430,7 @@ void erf_make_tau_terms (int level, int nrk,
                                            cell_data,
                                            s11, s22, s33,
                                            s12, s13, s23,
-                                           s12_op, s13_op, s23_op,
-                                           er_arr,
-                                           thinbody);
+                                           er_arr);
                 }
 
                 // Remove halo cells from tau_ii but extend across valid_box bdry

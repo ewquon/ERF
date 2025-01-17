@@ -99,9 +99,6 @@ ComputeStressConsVisc_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Real mu_eff,
  * @param[in,out] tau12 12 strain -> stress
  * @param[in,out] tau13 13 strain -> stress
  * @param[in,out] tau23 23 strain -> stress
- * @param[in,out] tau12_op 12 strain -> stress (for thinbody faces)
- * @param[in,out] tau13_op 13 strain -> stress (for thinbody faces)
- * @param[in,out] tau23_op 23 strain -> stress (for thinbody faces)
  * @param[in] er_arr expansion rate
  */
 void
@@ -110,9 +107,7 @@ ComputeStressVarVisc_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Real mu_eff,
                         const Array4<const Real>& cell_data,
                         Array4<Real>& tau11, Array4<Real>& tau22, Array4<Real>& tau33,
                         Array4<Real>& tau12, Array4<Real>& tau13, Array4<Real>& tau23,
-                        Array4<Real>& tau12_op, Array4<Real>& tau13_op, Array4<Real>& tau23_op,
-                        const Array4<const Real>& er_arr,
-                        const ThinImmersedBody& thinbody)
+                        const Array4<const Real>& er_arr)
 {
     Real OneThird   = (1./3.);
 
@@ -170,97 +165,30 @@ ComputeStressVarVisc_N (Box bxcc, Box tbxxy, Box tbxxz, Box tbxyz, Real mu_eff,
             tau33(i,j,k) = -mu_33 * ( tau33(i,j,k) - OneThird*er_arr(i,j,k) );
         });
 
-//        if (!thinbody) {
-            // Off-diagonal strains -- default calculation
-            ParallelFor(tbxxy,tbxxz,tbxyz,
-            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-                Real mu_bar = 0.25*( mu_turb(i-1, j  , k, EddyDiff::Mom_h) + mu_turb(i, j  , k, EddyDiff::Mom_h)
-                                   + mu_turb(i-1, j-1, k, EddyDiff::Mom_h) + mu_turb(i, j-1, k, EddyDiff::Mom_h) );
-                Real mu_12  = mu_eff + 2.0*mu_bar;
-                tau12(i,j,k) *= -mu_12;
-                if ((i==125) && (j==125)) {
-                    AllPrint() << "tau12 (w/o tb)" << IntVect(i,j,k) << " = " << tau12(i,j,k)
-                        << "  u* = " << std::sqrt(std::abs(tau12(i,j,k)))
-                        << std::endl;
-                }
-            },
-            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-                Real mu_bar = 0.25*( mu_turb(i-1, j, k  , EddyDiff::Mom_v) + mu_turb(i, j, k  , EddyDiff::Mom_v)
-                                   + mu_turb(i-1, j, k-1, EddyDiff::Mom_v) + mu_turb(i, j, k-1, EddyDiff::Mom_v) );
-                Real mu_13  = mu_eff + 2.0*mu_bar;
-                tau13(i,j,k) *= -mu_13;
-            },
-            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-                Real mu_bar = 0.25*( mu_turb(i, j-1, k  , EddyDiff::Mom_v) + mu_turb(i, j, k  , EddyDiff::Mom_v)
-                                   + mu_turb(i, j-1, k-1, EddyDiff::Mom_v) + mu_turb(i, j, k-1, EddyDiff::Mom_v) );
-                Real mu_23  = mu_eff + 2.0*mu_bar;
-                tau23(i,j,k) *= -mu_23;
-            });
-#if 0
-       } else {
-            // Use one-sided strains if we have thin bodies
-            if (thinbody.have_xfaces || thinbody.have_yfaces) {
-                const auto& tb_xfaces = thinbody.xfacelist_d;
-                const auto& tb_yfaces = thinbody.yfacelist_d;
-
-                //ParallelFor(tbxxy,tbxxz,tbxyz,
-                ParallelFor(tbxxy,
-                [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
-                    const int diffidx = EddyDiff::Mom_h;
-                    int next_to_xface = is_touching_thin_body_xface(i, j, k, tb_xfaces, 1); // also check j-1
-                    int next_to_yface = is_touching_thin_body_yface(i, j, k, tb_yfaces, 0); // also check i-1
-#if 0
-                    // HACK -- exclude edge pts
-                    if ((i<=123) ||
-                        (i>=128) ||
-                        (j<124)  ||
-                        (j>125)) {
-                        next_to_xface = 0;
-                        next_to_yface = 0;
-                    }
-#endif
-                    if ((next_to_xface==0) && (next_to_yface)==0) {
-                        // default, no thin body
-                        Real mu_bar = 0.25*( mu_turb(i-1, j  , k, diffidx) + mu_turb(i, j  , k, diffidx)
-                                           + mu_turb(i-1, j-1, k, diffidx) + mu_turb(i, j-1, k, diffidx) );
-                        tau12(i,j,k) *= -(mu_eff + 2.0*mu_bar);
-                    }
-                    else if (next_to_xface < 0) {
-                        // thin body on low x-face
-                        Real mu_bar = 0.5*( mu_turb(i, j, k, diffidx) + mu_turb(i, j-1, k, diffidx) );
-                        tau12(i,j,k) *= -(mu_eff + 2.0*mu_bar);
-                    } else if (next_to_xface > 0) {
-                        // thin body on high x-face
-                        Real mu_bar = 0.5*( mu_turb(i, j, k, diffidx) + mu_turb(i, j-1, k, diffidx) );
-                        tau12_op(i+1,j,k) *= -(mu_eff + 2.0*mu_bar);
-                    } else if (next_to_yface < 0) {
-                        // thin body on low y-face
-                        Real mu_bar = 0.5*( mu_turb(i, j, k, diffidx) + mu_turb(i-1, j, k, diffidx) );
-                        tau12(i,j,k) *= -(mu_eff + 2.0*mu_bar);
-                        //if ((i==125) && (j+1==125)) {
-                        //    AllPrint() << "tau12" << IntVect(i,j,k) << " = " << tau12(i,j,k) << std::endl;
-                        //}
-                    } else if (next_to_yface > 0) {
-                        // thin body on high y-face
-                        Real mu_bar = 0.5*( mu_turb(i, j, k, diffidx) + mu_turb(i-1, j, k, diffidx) );
-                        tau12_op(i,j+1,k) *= -(mu_eff + 2.0*mu_bar);
-                        //if ((i==125) && (j+1==125)) {
-                        //    AllPrint() << "tau12_op" << IntVect(i,j+1,k) << " = " << tau12_op(i,j+1,k)
-                        //        << " mu_tot=" << mu_eff + 2.0*mu_bar
-                        //        << std::endl;
-                        //}
-                    }
-                    if ((i==125) && (j==125)) {
-                        AllPrint()
-                            << "tau12" << IntVect(i,j,k) << " = " << tau12(i,j,k)
-                            << "  (u* = " << std::sqrt(std::abs(tau12(i,j,k))) << ") "
-                            << "tau12_op" << IntVect(i,j,k) << " = " << tau12_op(i,j,k)
-                            << "  (u* = " << std::sqrt(std::abs(tau12_op(i,j,k))) << ")"
-                            << std::endl;
-                    }
-                });
+        // Off-diagonal strains -- default calculation
+        ParallelFor(tbxxy,tbxxz,tbxyz,
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            Real mu_bar = 0.25*( mu_turb(i-1, j  , k, EddyDiff::Mom_h) + mu_turb(i, j  , k, EddyDiff::Mom_h)
+                               + mu_turb(i-1, j-1, k, EddyDiff::Mom_h) + mu_turb(i, j-1, k, EddyDiff::Mom_h) );
+            Real mu_12  = mu_eff + 2.0*mu_bar;
+            tau12(i,j,k) *= -mu_12;
+            if ((i==125) && (j==125)) {
+                AllPrint() << "tau12 (w/o tb)" << IntVect(i,j,k) << " = " << tau12(i,j,k)
+                    << "  u* = " << std::sqrt(std::abs(tau12(i,j,k)))
+                    << std::endl;
             }
-        }
-#endif
+        },
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            Real mu_bar = 0.25*( mu_turb(i-1, j, k  , EddyDiff::Mom_v) + mu_turb(i, j, k  , EddyDiff::Mom_v)
+                               + mu_turb(i-1, j, k-1, EddyDiff::Mom_v) + mu_turb(i, j, k-1, EddyDiff::Mom_v) );
+            Real mu_13  = mu_eff + 2.0*mu_bar;
+            tau13(i,j,k) *= -mu_13;
+        },
+        [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept {
+            Real mu_bar = 0.25*( mu_turb(i, j-1, k  , EddyDiff::Mom_v) + mu_turb(i, j, k  , EddyDiff::Mom_v)
+                               + mu_turb(i, j-1, k-1, EddyDiff::Mom_v) + mu_turb(i, j, k-1, EddyDiff::Mom_v) );
+            Real mu_23  = mu_eff + 2.0*mu_bar;
+            tau23(i,j,k) *= -mu_23;
+        });
     }
 }

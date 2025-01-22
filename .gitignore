@@ -14,17 +14,19 @@ log.*
 */Testing/Temporary
 .*.swp
 
-/Exec/WORK/*
-ic.txt
-plt*
-chk*
-tmp_build_dir
-.ccls-cache
-ERF*.ex
+# Build
 AMReX_buildInfo.cpp
 cmake-build*
 cmake_build*
 cmake*ser*
 cmake*par*
-.idea
+MyBuild*
+tmp_build_dir
+ERF*.ex
+
+/Exec/WORK/*
+ic.txt
+plt*
+chk*
+.ccls-cache
 *.ipynb

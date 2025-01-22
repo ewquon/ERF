@@ -238,17 +238,35 @@ ERF::WritePlotFile (int which, PlotFileType plotfile_type, Vector<std::string> p
     Vector<MultiFab> mf_u(finest_level+1);
     Vector<MultiFab> mf_v(finest_level+1);
     Vector<MultiFab> mf_w(finest_level+1);
+    Vector<std::string> ustag_varnames = {"x_velocity_stag"};
+    Vector<std::string> vstag_varnames = {"y_velocity_stag"};
+    Vector<std::string> wstag_varnames = {"z_velocity_stag"};
     if (m_plot_face_vels) {
         for (int lev = 0; lev <= finest_level; ++lev) {
             BoxArray grid_stag_u(grids[lev]); grid_stag_u.surroundingNodes(0);
             BoxArray grid_stag_v(grids[lev]); grid_stag_v.surroundingNodes(1);
             BoxArray grid_stag_w(grids[lev]); grid_stag_w.surroundingNodes(2);
-            mf_u[lev].define(grid_stag_u, dmap[lev], 1, 0);
-            mf_v[lev].define(grid_stag_v, dmap[lev], 1, 0);
-            mf_w[lev].define(grid_stag_w, dmap[lev], 1, 0);
+            int n_stag_u = (thinbody.have_xfaces) ? 2 : 1;
+            int n_stag_v = (thinbody.have_yfaces) ? 2 : 1;
+            int n_stag_w = (thinbody.have_zfaces) ? 2 : 1;
+            mf_u[lev].define(grid_stag_u, dmap[lev], n_stag_u, 0);
+            mf_v[lev].define(grid_stag_v, dmap[lev], n_stag_v, 0);
+            mf_w[lev].define(grid_stag_w, dmap[lev], n_stag_w, 0);
             MultiFab::Copy(mf_u[lev],vars_new[lev][Vars::xvel],0,0,1,0);
             MultiFab::Copy(mf_v[lev],vars_new[lev][Vars::yvel],0,0,1,0);
             MultiFab::Copy(mf_w[lev],vars_new[lev][Vars::zvel],0,0,1,0);
+            if (thinbody.have_xfaces) {
+                MultiFab::Copy(mf_u[lev],*thinbody.fx[lev],0,1,1,0);
+                ustag_varnames.push_back("thinbody_fx");
+            }
+            if (thinbody.have_yfaces) {
+                MultiFab::Copy(mf_v[lev],*thinbody.fy[lev],0,1,1,0);
+                vstag_varnames.push_back("thinbody_fy");
+            }
+            if (thinbody.have_zfaces) {
+                MultiFab::Copy(mf_w[lev],*thinbody.fz[lev],0,1,1,0);
+                wstag_varnames.push_back("thinbody_fz");
+            }
         }
     }
 
@@ -1436,15 +1454,15 @@ ERF::WritePlotFile (int which, PlotFileType plotfile_type, Vector<std::string> p
                 Print() << "Writing face velocities" << std::endl;
                 WriteMultiLevelPlotfile(plotfilenameU, finest_level+1,
                                         GetVecOfConstPtrs(mf_u),
-                                        {"x_velocity_stag"},
+                                        ustag_varnames,
                                         Geom(), t_new[0], istep, refRatio());
                 WriteMultiLevelPlotfile(plotfilenameV, finest_level+1,
                                         GetVecOfConstPtrs(mf_v),
-                                        {"y_velocity_stag"},
+                                        vstag_varnames,
                                         Geom(), t_new[0], istep, refRatio());
                 WriteMultiLevelPlotfile(plotfilenameW, finest_level+1,
                                         GetVecOfConstPtrs(mf_w),
-                                        {"z_velocity_stag"},
+                                        wstag_varnames,
                                         Geom(), t_new[0], istep, refRatio());
             }
 
@@ -1557,15 +1575,15 @@ ERF::WritePlotFile (int which, PlotFileType plotfile_type, Vector<std::string> p
                     Print() << "Writing face velocities" << std::endl;
                     WriteMultiLevelPlotfile(plotfilenameU, finest_level+1,
                                             GetVecOfConstPtrs(mf_u),
-                                            {"x_velocity_stag"},
+                                            ustag_varnames,
                                             geom, t_new[0], istep, ref_ratio);
                     WriteMultiLevelPlotfile(plotfilenameV, finest_level+1,
                                             GetVecOfConstPtrs(mf_v),
-                                            {"y_velocity_stag"},
+                                            vstag_varnames,
                                             geom, t_new[0], istep, ref_ratio);
                     WriteMultiLevelPlotfile(plotfilenameW, finest_level+1,
                                             GetVecOfConstPtrs(mf_w),
-                                            {"z_velocity_stag"},
+                                            wstag_varnames,
                                             geom, t_new[0], istep, ref_ratio);
                 }
             } // ref_ratio test

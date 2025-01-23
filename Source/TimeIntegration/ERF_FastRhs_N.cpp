@@ -31,6 +31,7 @@ using namespace amrex;
  * @param[in   ]  l_use_moisture
  * @param[in   ]  l_reflux should we add fluxes to the FluxRegisters?
  * @param[in   ]  l_implicit_substepping
+ * @param[in   ]  thinbody container with specified zero-flux faces
  */
 
 void erf_fast_rhs_N (int step, int nrk,
@@ -54,7 +55,8 @@ void erf_fast_rhs_N (int step, int nrk,
                      YAFluxRegister* fr_as_fine,
                      bool l_use_moisture,
                      bool l_reflux,
-                     bool l_implicit_substepping)
+                     bool l_implicit_substepping,
+                     const ThinImmersedBody& thinbody)
 {
     //
     // NOTE: for step > 0, S_data and S_prev point to the same MultiFab data!!
@@ -253,6 +255,13 @@ void erf_fast_rhs_N (int step, int nrk,
             });
         } // nrk > 0 and/or step > 0
     } //mfi
+
+    if (thinbody.have_xfaces) {
+        ApplyMask(temp_cur_xmom, *thinbody.xflux_imask[level], 0);
+    }
+    if (thinbody.have_yfaces) {
+        ApplyMask(temp_cur_ymom, *thinbody.yflux_imask[level], 0);
+    }
 
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
@@ -609,4 +618,9 @@ void erf_fast_rhs_N (int step, int nrk,
         });
 
     } // mfi
+
+    if (thinbody.have_zfaces) {
+        ApplyMask(S_data[IntVars::zmom], *thinbody.zflux_imask[level], 0);
+    }
+
 }

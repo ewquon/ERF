@@ -162,7 +162,8 @@ auto fast_rhs_fun = [&](int fast_step, int /*n_sub*/, int nrk,
                                S_data, S_scratch, fine_geom, solverChoice.gravity,
                                dtau, beta_s, inv_fac,
                                mapfac_m[level], mapfac_u[level], mapfac_v[level],
-                               fr_as_crse, fr_as_fine, l_use_moisture, l_reflux, l_implicit_substepping);
+                               fr_as_crse, fr_as_fine, l_use_moisture, l_reflux, l_implicit_substepping,
+                               thinbody);
             } else {
                 // If this is not the first substep we pass in S_data as both the previous step's solution
                 //    and as the new-time solution to be defined here
@@ -171,7 +172,8 @@ auto fast_rhs_fun = [&](int fast_step, int /*n_sub*/, int nrk,
                                S_data, S_scratch, fine_geom, solverChoice.gravity,
                                dtau, beta_s, inv_fac,
                                mapfac_m[level], mapfac_u[level], mapfac_v[level],
-                               fr_as_crse, fr_as_fine, l_use_moisture, l_reflux, l_implicit_substepping);
+                               fr_as_crse, fr_as_fine, l_use_moisture, l_reflux, l_implicit_substepping,
+                               thinbody);
             }
         }
 

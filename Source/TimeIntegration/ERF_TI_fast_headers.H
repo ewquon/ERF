@@ -12,6 +12,9 @@
 #include <ERF_TileNoZ.H>
 #include <ERF_ProbCommon.H>
 
+#include <ERF_ThinBodyStruct.H>
+#include <ERF_Utils.H>
+
 /**
  * Function for computing the fast RHS with no terrain
  *
@@ -35,7 +38,8 @@ void erf_fast_rhs_N (int step, int nrk, int level, int finest_level,
                      amrex::YAFluxRegister* fr_as_crse,
                      amrex::YAFluxRegister* fr_as_fine,
                      bool l_use_moisture, bool l_reflux,
-                     bool l_implicit_substepping);
+                     bool l_implicit_substepping,
+                     const ThinImmersedBody& thinbody);
 
 /**
  * Function for computing the fast RHS with fixed terrain

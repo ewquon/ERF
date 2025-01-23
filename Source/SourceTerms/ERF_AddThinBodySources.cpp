@@ -38,7 +38,6 @@ void add_thin_body_sources (int level,
         MultiFab::Copy(*thinbody.fx[level], S_rhs[IntVars::xmom], 0, 0, 1, 0);
         thinbody.fx[level]->mult(-1., 0, 1, 0);
         ApplyInvertedMask(*thinbody.fx[level], *thinbody.xflux_imask[level], 0);
-        //MultiFab::Add(S_rhs[IntVars::xmom], *thinbody.fx[level], 0, 0, 1, 0);
         ApplyMask(S_rhs[IntVars::xmom], *thinbody.xflux_imask[level], 0);
     }
 
@@ -46,7 +45,6 @@ void add_thin_body_sources (int level,
         MultiFab::Copy(*thinbody.fy[level], S_rhs[IntVars::ymom], 0, 0, 1, 0);
         thinbody.fy[level]->mult(-1., 0, 1, 0);
         ApplyInvertedMask(*thinbody.fy[level], *thinbody.yflux_imask[level], 0);
-        //MultiFab::Add(S_rhs[IntVars::ymom], *thinbody.fy[level], 0, 0, 1, 0);
         ApplyMask(S_rhs[IntVars::ymom], *thinbody.yflux_imask[level], 0);
     }
 
@@ -54,7 +52,6 @@ void add_thin_body_sources (int level,
         MultiFab::Copy(*thinbody.fz[level], S_rhs[IntVars::zmom], 0, 0, 1, 0);
         thinbody.fz[level]->mult(-1., 0, 1, 0);
         ApplyInvertedMask(*thinbody.fz[level], *thinbody.zflux_imask[level], 0);
-        //MultiFab::Add(S_rhs[IntVars::zmom], *thinbody.fz[level], 0, 0, 1, 0);
         ApplyMask(S_rhs[IntVars::zmom], *thinbody.zflux_imask[level], 0);
     }
 }

@@ -73,9 +73,7 @@ void make_mom_sources (int level, int nrk,
                        const int n_qstate);
 
 void add_thin_body_sources (int level,
-                            amrex::MultiFab& xmom_source,
-                            amrex::MultiFab& ymom_source,
-                            amrex::MultiFab& zmom_source,
+                            amrex::Vector<amrex::MultiFab>& S_rhs,
                             ThinImmersedBody& thinbody);
 
 #if defined(ERF_USE_NETCDF)

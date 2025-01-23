@@ -156,7 +156,9 @@
                              EBFactory(level), thinbody,
                              fr_as_crse, fr_as_fine);
 
-            add_thin_body_sources(level, xmom_src, ymom_src, zmom_src, thinbody);
+            if (thinbody) {
+                add_thin_body_sources(level, S_rhs, thinbody);
+            }
 
             // We define and evolve (rho theta)_0 in order to re-create p_0 in a way that is consistent
             //    with our update of (rho theta) but does NOT maintain dp_0 / dz = -rho_0 g.  This is why
@@ -261,7 +263,9 @@
                              EBFactory(level), thinbody,
                              fr_as_crse, fr_as_fine);
 
-            add_thin_body_sources(level, xmom_src, ymom_src, zmom_src, thinbody);
+            if (thinbody) {
+                add_thin_body_sources(level, S_rhs, thinbody);
+            }
         }
 
 #ifdef ERF_USE_NETCDF

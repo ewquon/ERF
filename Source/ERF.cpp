@@ -1679,10 +1679,6 @@ ERF::ReadParameters ()
         }
     }
 
-    if (solverChoice.init_type == InitType::WRFInput) {
-        AMREX_ALWAYS_ASSERT(solverChoice.terrain_type == TerrainType::StaticFittedMesh);
-    }
-
     // What type of land surface model to use
     // NOTE: Must be checked after init_params
     if (solverChoice.lsm_type == LandSurfaceType::SLM) {

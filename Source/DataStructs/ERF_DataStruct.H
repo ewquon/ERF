@@ -207,7 +207,7 @@ struct SolverChoice {
 
         if ( (init_type == InitType::WRFInput) || (init_type == InitType::Metgrid) ) {
             if (terrain_type != TerrainType::StaticFittedMesh) {
-                amrex::Abort("Only terrain_type = StaticFittedMesh are allowed with init_type = WRFInput or Metgrid");
+                amrex::Warning("Expected terrain_type = StaticFittedMesh for init_type = WRFInput or Metgrid");
             }
         }
 

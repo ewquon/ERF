@@ -502,7 +502,16 @@ ERF::init_from_wrfinput (int lev)
         // **************************************************************************
         // Initialize the terrain itself and the metric quantities
         // **************************************************************************
-        AMREX_ALWAYS_ASSERT(solverChoice.terrain_type == TerrainType::StaticFittedMesh);
+        if (solverChoice.terrain_type != TerrainType::StaticFittedMesh) {
+            // Allow idealized/simple real data cases
+            AMREX_ALWAYS_ASSERT(solverChoice.terrain_type == TerrainType::None);
+            AMREX_ALWAYS_ASSERT_WITH_MESSAGE(terrain_bottom_min == terrain_bottom_max,
+                "Input terrain is not flat, need to set erf.terrain_type = StaticFittedMesh");
+            if (terrain_bottom_min != 0.0) {
+                Print() << "Wrfinput terrain height = " << terrain_bottom_min << std::endl;
+                amrex::Warning("Assuming terrain height is 0.0");
+            }
+        }
 
         // FillBoundary to populate the internal ghost cells (for averaging)
          mf_PH.FillBoundary(geom[lev].periodicity());

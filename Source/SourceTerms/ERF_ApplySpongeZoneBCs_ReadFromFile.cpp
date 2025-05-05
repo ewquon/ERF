@@ -67,14 +67,16 @@ ApplySpongeZoneBCsForMom_ReadFromFile (const SpongeChoice& spongeChoice,
         if(use_xlo_sponge_damping){
             if (x < xlo_sponge_end) {
                 Real xi = (xlo_sponge_end - x) / (xlo_sponge_end - ProbLoArr[0]);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_u_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
             }
         }
         // x hi sponge
         if(use_xhi_sponge_damping){
             if (x > xhi_sponge_start) {
                 Real xi = (x - xhi_sponge_start) / (ProbHiArr[0] - xhi_sponge_start);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_u_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
             }
         }
 
@@ -82,14 +84,16 @@ ApplySpongeZoneBCsForMom_ReadFromFile (const SpongeChoice& spongeChoice,
         if(use_ylo_sponge_damping){
             if (y < ylo_sponge_end) {
                 Real xi = (ylo_sponge_end - y) / (ylo_sponge_end - ProbLoArr[1]);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_u_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
             }
         }
-        // x right sponge
+        // y hi sponge
         if(use_yhi_sponge_damping){
             if (y > yhi_sponge_start) {
                 Real xi = (y - yhi_sponge_start) / (ProbHiArr[1] - yhi_sponge_start);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_u_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
             }
         }
 
@@ -97,16 +101,17 @@ ApplySpongeZoneBCsForMom_ReadFromFile (const SpongeChoice& spongeChoice,
         if(use_zlo_sponge_damping){
             if (z < zlo_sponge_end) {
                 Real xi = (zlo_sponge_end - z) / (zlo_sponge_end - ProbLoArr[2]);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_u_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
             }
         }
-
 
         // z hi sponge
         if(use_zhi_sponge_damping){
             if (z > zhi_sponge_start) {
                 Real xi = (z - zhi_sponge_start) / (ProbHiArr[2] - zhi_sponge_start);
-                rho_u_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_u_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_u(i, j, k) - cell_data(i,j,k,0)*ubar_sponge[k]);
             }
         }
     });
@@ -125,14 +130,16 @@ ApplySpongeZoneBCsForMom_ReadFromFile (const SpongeChoice& spongeChoice,
         if(use_xlo_sponge_damping){
             if (x < xlo_sponge_end) {
                 Real xi = (xlo_sponge_end - x) / (xlo_sponge_end - ProbLoArr[0]);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_v_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
             }
         }
         // x hi sponge
         if(use_xhi_sponge_damping){
             if (x > xhi_sponge_start) {
                 Real xi = (x - xhi_sponge_start) / (ProbHiArr[0] - xhi_sponge_start);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_v_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
             }
         }
 
@@ -140,14 +147,16 @@ ApplySpongeZoneBCsForMom_ReadFromFile (const SpongeChoice& spongeChoice,
         if(use_ylo_sponge_damping){
             if (y < ylo_sponge_end) {
                 Real xi = (ylo_sponge_end - y) / (ylo_sponge_end - ProbLoArr[1]);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_v_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
             }
         }
-        // x right sponge
+        // y hi sponge
         if(use_yhi_sponge_damping){
             if (y > yhi_sponge_start) {
                 Real xi = (y - yhi_sponge_start) / (ProbHiArr[1] - yhi_sponge_start);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_v_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
             }
         }
 
@@ -155,16 +164,17 @@ ApplySpongeZoneBCsForMom_ReadFromFile (const SpongeChoice& spongeChoice,
         if(use_zlo_sponge_damping){
             if (z < zlo_sponge_end) {
                 Real xi = (zlo_sponge_end - z) / (zlo_sponge_end - ProbLoArr[2]);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_v_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
             }
         }
-
 
         // z hi sponge
         if(use_zhi_sponge_damping){
             if (z > zhi_sponge_start) {
                 Real xi = (z - zhi_sponge_start) / (ProbHiArr[2] - zhi_sponge_start);
-                rho_v_rhs(i, j, k) -= sponge_strength * xi * xi * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
+                Real sinefac = std::sin(PIoTwo*xi);
+                rho_v_rhs(i, j, k) -= sponge_strength * sinefac * sinefac * (rho_v(i, j, k) - cell_data(i,j,k,0)*vbar_sponge[k]);
             }
         }
     });

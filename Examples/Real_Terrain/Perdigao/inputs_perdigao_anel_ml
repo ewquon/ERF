@@ -1,0 +1,131 @@
+# ------------------  INPUTS TO MAIN PROGRAM  -------------------
+erf.anelastic = 1
+erf.use_fft = 1
+
+stop_time = 600.0
+
+amrex.fpe_trap_invalid = 0
+
+fabarray.mfiter_tile_size = 1024 1024 1024
+
+# PROBLEM SIZE & GEOMETRY
+# domain extent: [8544, 6432]
+geometry.prob_lo =  603972 4393412    0
+geometry.prob_hi =  612516 4399844 1056
+amr.n_cell       =      89      67   11  # Δ = 96 m
+
+geometry.is_periodic    =  0      0      0
+
+erf.terrain_type            = StaticFittedMesh
+erf.terrain_file_name       = "perdigao.txt"
+erf.terrain_smoothing = 0  # default (other options not available with multilevel)
+
+erf.terrain_z_levels = 0 96 192 307.2 445.44 611.328 803.328 995.328 1187.328 1379.328 1571.328 1763.328
+
+# REFINEMENT / REGRIDDING
+amr.max_level       = 2       # maximum level number allowed
+amr.ref_ratio       = 2
+erf.refinement_indicators = box1
+
+# all sorts of indexing OOB issues on k...
+erf.box1.max_level = 2
+erf.box1.in_box_lo = 603972 4393412  0
+erf.box1.in_box_hi = 612516 4399844 72
+
+#erf.box1.max_level=1
+#amr.max_level=1
+
+# BOUNDARY CONDITIONS
+zlo.type              = "surface_layer"
+erf.most.z0           = 0.43  # "grass", Wagenbrenner 2019
+erf.most.surf_temp    = 300.0 # initial value, should match input_sounding
+zlo.type = SlipWall
+
+zhi.type              = "SlipWall"
+
+xlo.type = "Inflow"
+ylo.type = "Inflow"
+xlo.dirichlet_file = "perdigao_inflow.txt"
+ylo.dirichlet_file = "perdigao_inflow.txt"
+
+xhi.type = "Outflow"
+yhi.type = "Outflow"
+
+#erf.sponge_type = "input_sponge"
+#erf.input_sponge_file = "perdigao_inflow.txt"
+#erf.sponge_strength = 0.2  # match rayleigh
+#erf.use_xlo_sponge_damping = true
+#erf.use_ylo_sponge_damping = true
+#erf.xlo_sponge_end =  604460  # L = 500, match rayleigh
+#erf.ylo_sponge_end = 4393892
+
+# INITIALIZATION
+erf.init_type = "input_sounding"
+erf.input_sounding_file = "perdigao_sounding.txt"
+
+# TIME STEP CONTROL
+#erf.fixed_dt = 0.5
+#erf.substepping_cfl = 0.5 # compressible (18 substeps)
+
+#erf.cfl = 0.5  # KE blows up at step 4, bad theta at step 5
+
+# bad theta at step 24, max dt ~ 0.7
+#erf.cfl = 0.5
+#erf.init_shrink = 0.1
+#erf.change_max = 1.1 # max growth in dt
+
+# bad theta at step 31, max dt ~ 0.5
+#erf.cfl = 0.25
+#erf.init_shrink = 0.1
+#erf.change_max = 1.1 # max growth in dt
+
+erf.cfl = 0.2 # bad theta
+erf.cfl = 0.15 # bad theta
+erf.cfl = 0.125
+erf.cfl = 0.1
+
+# DIAGNOSTICS & VERBOSITY
+erf.sum_interval    = 1       # timesteps between computing mass
+erf.v               = 1       # verbosity in ERF.cpp
+amr.v               = 1       # verbosity in Amr.cpp
+erf.mg_v            = 1       # linear solver verbosity
+erf.mg_v            = 2       # linear solver verbosity
+
+# CHECKPOINT FILES
+erf.check_file      = chk        # root name of checkpoint file
+erf.check_int       = 1000       # number of timesteps between checkpoints
+
+# PLOTFILES
+erf.plot_file_1     = plt_       # prefix of plotfile name
+#erf.plot_int_1      = 100        # number of timesteps between plotfiles
+erf.plot_per_1      = 60.0       # time interval between plotfiles
+erf.plot_vars_1     = x_velocity y_velocity z_velocity z_phys Kmv
+erf.plot_vars_1     = x_velocity y_velocity z_velocity z_phys KE Kmv
+#erf.plot_vars_1     = x_velocity y_velocity z_velocity z_phys walldist KE Kmv
+
+erf.plot2d_file_1   = plt2d_
+erf.plot2d_int_1    = 10
+erf.plot2d_vars_1   = u_star
+
+# SOLVER CHOICE
+erf.dycore_horiz_adv_type  = "Upwind_5th"
+erf.dycore_vert_adv_type   = "Upwind_3rd"
+erf.dryscal_horiz_adv_type = "Upwind_5th"
+erf.dryscal_vert_adv_type  = "Upwind_3rd"
+
+erf.molec_diff_type = "None"
+
+erf.use_gravity = true
+#erf.use_coriolis = true
+#erf.coriolis_3d = 0
+#erf.latitude = 57.188550  # 57°11.313'N, 7°22.360'W
+#erf.rotational_time_period = 86400.0
+
+# Turbulence closure
+erf.rans_type       = "kEqn"
+#erf.sigma_k         = 1.0 # default
+#erf.max_geom_lscale = 30.0 # ~ kappa * (0.1 * zi), default
+
+erf.rayleigh_damp_W = true
+erf.rayleigh_dampcoef = 0.2 # [1/s]
+erf.rayleigh_zdamp = 500.
